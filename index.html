@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>F1 2026 Analytics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg:        #0A0A0A;
+      --s1:        #141414;
+      --s2:        #1C1C1C;
+      --s3:        #242424;
+      --border:    #242424;
+      --border-hi: #3A3A3A;
+      --red:       #E8002D;
+      --red-a15:   rgba(232,0,45,0.15);
+      --red-a08:   rgba(232,0,45,0.08);
+      --white:     #FFFFFF;
+      --g300:      #D1D5DB;
+      --g400:      #9CA3AF;
+      --g500:      #6B7280;
+      --g600:      #4B5563;
+      --g700:      #374151;
+      --mclaren:   #FF8000;
+      --ferrari:   #E8002D;
+      --redbull:   #3671C6;
+      --mercedes:  #27F4D2;
+      --aston:     #358C75;
+      --alpine:    #0093CC;
+      --williams:  #64C4FF;
+      --haas:      #B6BABD;
+      --audi:      #DBD900;
+      --rb:        #6692FF;
+      --cadillac:  #B400FF;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::-webkit-scrollbar            { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track      { background: var(--s1); }
+    ::-webkit-scrollbar-thumb      { background: var(--s3); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover{ background: var(--g600); }
+
+    .navbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 56px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      border-top: 2px solid var(--red);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      z-index: 1000;
+    }
+    .nav-logo {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--red);
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .nav-logo-year { color: var(--g500); font-weight: 400; }
+    .nav-links { display: flex; align-items: stretch; list-style: none; height: 100%; }
+    .nav-links li { display: flex; align-items: stretch; }
+    .nav-links li a {
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--g500);
+      text-decoration: none;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+      cursor: pointer;
+    }
+    .nav-links li a:hover  { color: var(--g300); }
+    .nav-links li a.active { color: var(--white); border-bottom-color: var(--red); }
+
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      padding: 8px;
+    }
+    .hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--white);
+      border-radius: 1px;
+      transition: transform 0.2s, opacity 0.2s;
+    }
+    .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    .mobile-menu {
+      display: none;
+      position: fixed;
+      top: 56px; left: 0; right: 0;
+      background: var(--s1);
+      border-bottom: 1px solid var(--border);
+      z-index: 999;
+      animation: slideDown 0.18s ease;
+    }
+    .mobile-menu.open { display: block; }
+    .mobile-menu a {
+      display: block;
+      padding: 13px 28px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--g400);
+      text-decoration: none;
+      border-left: 3px solid transparent;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+    .mobile-menu a:hover  { color: var(--white); background: var(--s2); }
+    .mobile-menu a.active { color: var(--white); border-left-color: var(--red); }
+
+    .main        { padding-top: 56px; min-height: 100dvh; }
+    .tab-content { display: none; animation: fadeUp 0.28s ease; }
+    .tab-content.active { display: block; }
+
+    .divider { border: none; border-top: 1px solid var(--border); }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 14px;
+      background: var(--s2);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--white);
+    }
+    .pill-dot        { width: 6px; height: 6px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
+    .pill-dot--green { background: #22C55E; }
+    .pill-dot--pulse { animation: blink 2s infinite; }
+
+    .badge-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--g400);
+    }
+    .badge-sprint {
+      display: inline-block;
+      padding: 2px 6px;
+      background: var(--red-a15);
+      border: 1px solid rgba(232,0,45,0.25);
+      border-radius: 1px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--red);
+    }
+    .badge-next {
+      display: inline-block;
+      padding: 2px 6px;
+      background: rgba(34,197,94,0.12);
+      border: 1px solid rgba(34,197,94,0.25);
+      border-radius: 1px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #22C55E;
+    }
+    .badge-new {
+      display: inline-block;
+      padding: 2px 6px;
+      background: rgba(219,217,0,0.12);
+      border: 1px solid rgba(219,217,0,0.25);
+      border-radius: 1px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #DBD900;
+    }
+
+    [data-tip] { position: relative; }
+    [data-tip]:hover::after {
+      content: attr(data-tip);
+      position: absolute;
+      bottom: calc(100% + 7px);
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 5px 10px;
+      background: var(--s3);
+      border: 1px solid var(--border-hi);
+      border-radius: 2px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--g400);
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 200;
+    }
+
+    .hero {
+      padding: 60px 28px 52px;
+      max-width: 1200px;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-bg-num {
+      position: absolute;
+      right: -20px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(140px, 20vw, 240px);
+      font-weight: 700;
+      color: var(--s1);
+      line-height: 1;
+      pointer-events: none;
+      user-select: none;
+      letter-spacing: -0.02em;
+    }
+    .hero-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 14px;
+    }
+    .hero-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(40px, 7vw, 80px);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      line-height: 0.92;
+      color: var(--white);
+      margin-bottom: 22px;
+      position: relative;
+      z-index: 1;
+    }
+    .hero-sub { font-size: 13px; color: var(--g500); margin-bottom: 28px; letter-spacing: 0.02em; }
+    .hero-sub strong { color: var(--g300); font-weight: 500; }
+    .hero-pills { display: flex; flex-wrap: wrap; gap: 10px; }
+    .hero-progress { margin: 28px 0 0; max-width: 320px; }
+    .hero-progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--g600);
+      margin-bottom: 6px;
+    }
+    .hero-progress-track { height: 2px; background: var(--s3); border-radius: 2px; overflow: hidden; }
+    .hero-progress-fill  { height: 100%; width: 13.6%; background: var(--red); border-radius: 2px; }
+
+    .map-container {
+      position: relative;
+      width: 100%;
+      height: 800px;
+      background: var(--s1);
+      overflow: hidden;
+    }
+    .map-grid {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+    .map-grid-major {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+      background-size: 192px 192px;
+    }
+    .map-center {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+    .map-center svg { opacity: 0.12; margin-bottom: 14px; }
+    .map-center-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--g600);
+    }
+    .map-badge { position: absolute; top: 18px; right: 18px; }
+    .circuit-card {
+      position: absolute;
+      bottom: 20px; left: 20px;
+      background: rgba(10,10,10,0.92);
+      border: 1px solid var(--border-hi);
+      border-left: 3px solid var(--red);
+      padding: 16px 20px;
+      min-width: 210px;
+      backdrop-filter: blur(4px);
+    }
+    .circuit-card-round {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 10px; font-weight: 600;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--red); margin-bottom: 5px;
+    }
+    .circuit-card-name {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 21px; font-weight: 700;
+      letter-spacing: 0.04em; text-transform: uppercase;
+      color: var(--white); margin-bottom: 4px;
+    }
+    .circuit-card-info { font-size: 12px; color: var(--g500); line-height: 1.6; }
+    .map-legend {
+      display: flex; flex-wrap: wrap; gap: 20px;
+      padding: 14px 28px;
+      background: var(--s1);
+      border-top: 1px solid var(--border);
+    }
+    .legend-item {
+      display: flex; align-items: center; gap: 7px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--g500);
+    }
+
+    .results-wrap { max-width: 1200px; margin: 0 auto; padding: 36px 28px; }
+    .section-eyebrow {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 10px; font-weight: 600;
+      letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--red); margin-bottom: 5px;
+    }
+    .section-h {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 28px; font-weight: 700;
+      letter-spacing: 0.04em; text-transform: uppercase;
+      color: var(--white); margin-bottom: 26px;
+    }
+
+    .race-scroll {
+      display: flex; gap: 8px;
+      overflow-x: auto; padding-bottom: 6px;
+      scroll-snap-type: x mandatory;
+      -ms-overflow-style: none; scrollbar-width: none;
+      -webkit-mask-image: linear-gradient(to right, transparent 0, black 32px, black calc(100% - 32px), transparent 100%);
+      mask-image: linear-gradient(to right, transparent 0, black 32px, black calc(100% - 32px), transparent 100%);
+    }
+    .race-scroll::-webkit-scrollbar { display: none; }
+    .race-card {
+      flex-shrink: 0; width: 106px;
+      padding: 11px 12px;
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      cursor: pointer;
+      scroll-snap-align: start;
+      transition: border-color 0.15s, background 0.15s;
+      position: relative;
+    }
+    .race-card:hover:not(.upcoming) { background: var(--s2); border-color: var(--border-hi); }
+    .race-card.selected  { border-color: var(--red); background: var(--red-a08); }
+    .race-card.upcoming  { opacity: 0.38; cursor: default; }
+    .race-flag   { font-size: 19px; margin-bottom: 7px; line-height: 1; }
+    .race-rnd    { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--g600); margin-bottom: 3px; }
+    .race-name   { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; text-transform: uppercase; color: var(--white); line-height: 1.15; margin-bottom: 4px; }
+    .race-date   { font-size: 10px; color: var(--g500); }
+    .race-badges { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 5px; }
+    .race-dot    { position: absolute; top: 9px; right: 9px; width: 5px; height: 5px; border-radius: 50%; background: var(--red); }
+
+    .podium-header {
+      display: flex; align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 18px; gap: 16px; flex-wrap: wrap;
+    }
+    .sprint-toggle {
+      display: flex; gap: 2px;
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: 2px; padding: 3px;
+    }
+    .stbtn {
+      padding: 5px 16px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--g500);
+      background: transparent; border: none; border-radius: 1px;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .stbtn.active { background: var(--s3); color: var(--white); }
+
+    .podium-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+    .podium-card {
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 22px 20px 20px;
+      position: relative; overflow: hidden;
+      transition: border-color 0.15s;
+    }
+    .podium-card:hover { border-color: var(--border-hi); }
+    .podium-card::before { content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 3px; }
+    .podium-card.p1 { border-top: 2px solid #C4A000; }
+    .podium-card.p1::before { background: #C4A000; }
+    .podium-card.p2::before { background: #8A8A8A; }
+    .podium-card.p3::before { background: #7A4A20; }
+    .podium-num {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 54px; font-weight: 700;
+      line-height: 1; margin-bottom: 14px;
+      font-variant-numeric: tabular-nums; user-select: none;
+    }
+    .p1 .podium-num { color: rgba(196,160,0,0.18); }
+    .p2 .podium-num { color: rgba(138,138,138,0.18); }
+    .p3 .podium-num { color: rgba(122,74,32,0.18); }
+    .podium-driver {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 23px; font-weight: 700;
+      letter-spacing: 0.04em; text-transform: uppercase;
+      color: var(--white); margin-bottom: 5px;
+    }
+    .podium-team { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--g400); }
+    .team-dot    { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .podium-gap  {
+      margin-top: 14px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 14px; font-weight: 600;
+      letter-spacing: 0.05em; color: var(--g500);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .tbl-wrap { overflow-x: auto; }
+    .tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .tbl th {
+      padding: 9px 14px; text-align: left;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 10px; font-weight: 600;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--g600); border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .tbl td { padding: 11px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .tbl tr:hover td { background: var(--s1); }
+
+    .standings-wrap { max-width: 1200px; margin: 0 auto; padding: 36px 28px; }
+    .subtabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 28px; }
+    .subtab {
+      padding: 10px 22px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 13px; font-weight: 600;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--g500); cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .subtab:hover  { color: var(--g300); }
+    .subtab.active { color: var(--white); border-bottom-color: var(--red); }
+
+    .stbl { width: 100%; border-collapse: collapse; }
+    .stbl th {
+      padding: 8px 16px; text-align: left;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 10px; font-weight: 600;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--g600); border-bottom: 1px solid var(--border);
+    }
+    .stbl th.r { text-align: right; }
+    .stbl tr.srow {
+      border-bottom: 1px solid var(--border);
+      opacity: 0; transform: translateX(-12px);
+      animation: slideIn 0.3s ease forwards;
+      transition: background 0.15s;
+    }
+    .stbl tr.srow:hover { background: var(--s1); }
+    .stbl td { padding: 13px 16px; vertical-align: middle; }
+    .pos-cell {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 17px; font-weight: 700;
+      color: var(--g600); font-variant-numeric: tabular-nums; width: 52px;
+    }
+    .pos-cell.hi { color: var(--white); }
+    .bar-cell  { width: 5px; padding-left: 0 !important; padding-right: 8px !important; }
+    .team-bar  { width: 3px; height: 38px; border-radius: 2px; }
+    .driver-cell .d-name {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 17px; font-weight: 700;
+      letter-spacing: 0.03em; text-transform: uppercase;
+      color: var(--white);
+    }
+    .driver-cell .d-abbr {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.1em; color: var(--g600); margin-left: 7px;
+    }
+    .driver-cell .d-team { font-size: 11px; color: var(--g500); margin-top: 1px; }
+    .pts-cell {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 21px; font-weight: 700;
+      color: var(--white); text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    .nat-cell { font-size: 15px; }
+    .team-cell .t-name {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 19px; font-weight: 700;
+      letter-spacing: 0.04em; text-transform: uppercase;
+      color: var(--white);
+    }
+    .team-cell .t-drivers { font-size: 11px; color: var(--g500); margin-top: 1px; }
+
+    .chat-outer {
+      max-width: 840px; margin: 0 auto;
+      padding: 32px 28px;
+      display: flex; flex-direction: column;
+      height: calc(100dvh - 56px);
+    }
+    .chat-head {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .chat-head-left .chat-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 24px; font-weight: 700;
+      letter-spacing: 0.05em; text-transform: uppercase;
+      color: var(--white);
+    }
+    .chat-head-left .chat-sub { font-size: 12px; color: var(--g500); margin-top: 1px; }
+    .live-pill {
+      display: flex; align-items: center; gap: 6px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--red);
+    }
+    .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--red); animation: blink 2s infinite; }
+    .chat-messages {
+      flex: 1; overflow-y: auto;
+      padding: 20px 0 8px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .msg { display: flex; gap: 12px; animation: fadeUp 0.2s ease; }
+    .msg-avatar {
+      width: 34px; height: 34px; border-radius: 2px;
+      background: var(--red);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 12px; font-weight: 700;
+      color: var(--white); flex-shrink: 0;
+    }
+    .msg-avatar.user { background: var(--s3); }
+    .msg-body { flex: 1; }
+    .msg-from {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 10px; font-weight: 600;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--g600); margin-bottom: 5px;
+    }
+    .msg-text {
+      background: var(--s1); border: 1px solid var(--border);
+      border-radius: 2px; padding: 12px 16px;
+      font-size: 14px; color: var(--white); line-height: 1.65;
+    }
+    .msg.bot .msg-text { border-left: 3px solid var(--red); }
+    .msg-text.muted { color: var(--g500); font-style: italic; font-size: 13px; }
+    .chat-suggestions {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      padding: 12px 0 10px; flex-shrink: 0;
+    }
+    .sug-pill {
+      padding: 7px 14px;
+      background: var(--s1); border: 1px solid var(--border);
+      border-radius: 2px; font-size: 12px; font-weight: 500;
+      color: var(--g400); cursor: pointer;
+      transition: all 0.15s; white-space: nowrap;
+    }
+    .sug-pill:hover { border-color: var(--red); color: var(--white); background: var(--red-a08); }
+    .chat-input-row {
+      display: flex; gap: 10px;
+      padding-top: 12px; border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .chat-input {
+      flex: 1; background: var(--s1);
+      border: 1px solid var(--border); border-radius: 2px;
+      padding: 12px 16px;
+      font-family: 'Inter', sans-serif; font-size: 14px;
+      color: var(--white); outline: none;
+      transition: border-color 0.15s; min-width: 0;
+    }
+    .chat-input::placeholder { color: var(--g600); }
+    .chat-input:focus { border-color: var(--red); }
+    .chat-send {
+      flex-shrink: 0; padding: 0 22px; height: 48px;
+      background: var(--red); border: none; border-radius: 2px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 12px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--white); cursor: pointer;
+      transition: opacity 0.15s;
+      display: flex; align-items: center; gap: 7px;
+    }
+    .chat-send:hover { opacity: 0.82; }
+
+    .pred-wrap { max-width: 1200px; margin: 0 auto; padding: 36px 28px; }
+    .pred-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; margin-bottom: 52px; }
+    .pred-card {
+      background: var(--s1); border: 1px solid var(--border);
+      border-radius: 2px; padding: 26px 24px 22px;
+      transition: border-color 0.15s;
+    }
+    .pred-card:hover { border-color: var(--border-hi); }
+    .pred-card-num {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 10px; font-weight: 600;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--red); margin-bottom: 6px;
+    }
+    .pred-card-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 21px; font-weight: 700;
+      letter-spacing: 0.03em; text-transform: uppercase;
+      color: var(--white); margin-bottom: 5px;
+    }
+    .pred-card-status { font-size: 12px; color: var(--g500); margin-bottom: 22px; }
+    .pred-track { height: 2px; background: var(--s3); border-radius: 2px; margin-bottom: 14px; overflow: hidden; }
+    .pred-fill  { height: 100%; background: var(--red); border-radius: 2px; transition: width 1.2s cubic-bezier(0.22,1,0.36,1); }
+    .pred-footer { display: flex; align-items: center; justify-content: space-between; }
+    .pred-pct {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--g600);
+    }
+    .notify-btn {
+      padding: 6px 16px; background: transparent;
+      border: 1px solid var(--border); border-radius: 2px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--g500); cursor: pointer; transition: all 0.15s;
+    }
+    .notify-btn:hover { border-color: var(--white); color: var(--white); }
+    .about-section { border-top: 1px solid var(--border); padding-top: 44px; }
+    .about-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 24px; }
+    .about-card {
+      background: var(--s1); border: 1px solid var(--border);
+      border-radius: 2px; padding: 22px 20px;
+    }
+    .about-card-lbl {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 10px; font-weight: 600;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--red); margin-bottom: 6px;
+    }
+    .about-card-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 17px; font-weight: 700;
+      letter-spacing: 0.04em; text-transform: uppercase;
+      color: var(--white); margin-bottom: 10px;
+    }
+    .about-card p { font-size: 12px; color: var(--g500); line-height: 1.7; }
+
+    @keyframes fadeUp   { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideIn  { to { opacity: 1; transform: translateX(0); } }
+    @keyframes slideDown{ from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes blink    { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .hamburger { display: flex; }
+      .navbar    { padding: 0 18px; }
+      .hero      { padding: 44px 18px 36px; }
+      .hero-bg-num { display: none; }
+      .podium-grid, .pred-grid, .about-grid { grid-template-columns: 1fr; }
+      .map-legend { padding: 12px 18px; gap: 14px; }
+      .results-wrap, .standings-wrap, .pred-wrap { padding: 28px 18px; }
+      .chat-outer { padding: 22px 18px; }
+      .stbl .nat-cell, .stbl th:nth-child(4) { display: none; }
+    }
+    @media (max-width: 480px) {
+      .hero-title { font-size: 38px; }
+      .podium-card { padding: 18px 16px; }
+      .race-card { width: 96px; }
+    }
+
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-logo" onclick="switchTab('map')">F1&nbsp;<span class="nav-logo-year">2026</span></div>
+  <ul class="nav-links">
+    <li><a data-tab="map"         class="active" onclick="switchTab('map');return false;"         href="#">Map</a></li>
+    <li><a data-tab="results"                    onclick="switchTab('results');return false;"      href="#">Results</a></li>
+    <li><a data-tab="standings"                  onclick="switchTab('standings');return false;"    href="#">Standings</a></li>
+    <li><a data-tab="chat"                       onclick="switchTab('chat');return false;"         href="#">Chat</a></li>
+    <li><a data-tab="predictions"                onclick="switchTab('predictions');return false;"  href="#">Predictions</a></li>
+  </ul>
+  <div class="hamburger" id="ham" onclick="toggleMenu()"><span></span><span></span><span></span></div>
+</nav>
+
+<div class="mobile-menu" id="mobileMenu">
+  <a data-tab="map"         class="active" onclick="switchTab('map');closeMenu();return false;"         href="#">Map</a>
+  <a data-tab="results"                    onclick="switchTab('results');closeMenu();return false;"      href="#">Results</a>
+  <a data-tab="standings"                  onclick="switchTab('standings');closeMenu();return false;"    href="#">Standings</a>
+  <a data-tab="chat"                       onclick="switchTab('chat');closeMenu();return false;"         href="#">Chat</a>
+  <a data-tab="predictions"                onclick="switchTab('predictions');closeMenu();return false;"  href="#">Predictions</a>
+</div>
+
+<main class="main">
+
+  <!-- MAP TAB -->
+  <div class="tab-content active" id="tab-map">
+    <div class="hero">
+      <div class="hero-bg-num" aria-hidden="true">2026</div>
+      <div class="hero-label">2026 FIA Formula One World Championship</div>
+      <h1 class="hero-title">Formula&nbsp;1<br>World&nbsp;Championship</h1>
+      <p class="hero-sub"><strong>Round 4 of 22</strong> &nbsp;·&nbsp; Miami Grand Prix &nbsp;·&nbsp; May 8–10, 2026</p>
+      <div class="hero-pills">
+        <div class="pill"><div class="pill-dot"></div>3 Races Complete</div>
+        <div class="pill"><div class="pill-dot pill-dot--green pill-dot--pulse"></div>Next: Miami Sprint Weekend</div>
+      </div>
+      <div class="hero-progress">
+        <div class="hero-progress-label"><span>Season Progress</span><span>3 / 22</span></div>
+        <div class="hero-progress-track"><div class="hero-progress-fill"></div></div>
+      </div>
+    </div>
+    <hr class="divider">
+    <div class="map-container">
+      <div class="map-grid"></div>
+      <div class="map-grid-major"></div>
+      <div class="map-center">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        </svg>
+        <div class="map-center-label">Interactive Circuit Map</div>
+        <div class="map-center-label" style="color:var(--g700);margin-top:4px;">OpenF1 Integration · Coming Soon</div>
+      </div>
+      <div class="map-badge">
+        <div class="badge-live"><div class="live-dot"></div>Live data via OpenF1</div>
+      </div>
+      <div class="circuit-card">
+        <div class="circuit-card-round">Circuit Tracker · Round 4</div>
+        <div class="circuit-card-name">Miami Int'l Autodrome</div>
+        <div class="circuit-card-info">May 8–10, 2026 &nbsp;·&nbsp; Miami, Florida 🇺🇸</div>
+        <div class="circuit-card-info" style="margin-top:6px;display:flex;gap:8px;">
+          <span class="badge-next">Next Race</span>
+          <span class="badge-sprint">Sprint Weekend</span>
+        </div>
+      </div>
+    </div>
+    <div class="map-legend">
+      <div class="legend-item">🏆&nbsp; Completed</div>
+      <div class="legend-item">🏎️&nbsp; Active / Race Weekend</div>
+      <div class="legend-item">📍&nbsp; Next Race</div>
+      <div class="legend-item">🏁&nbsp; Upcoming</div>
+    </div>
+  </div>
+
+  <!-- RESULTS TAB -->
+  <div class="tab-content" id="tab-results">
+    <div class="results-wrap">
+      <div class="section-eyebrow">2026 Season</div>
+      <div class="section-h">Race Results</div>
+
+      <div class="race-scroll" id="raceScroll">
+        <div class="race-card selected" data-race="1" onclick="selectRace(this,1)" tabindex="0">
+          <div class="race-flag">🇦🇺</div><div class="race-rnd">R01</div>
+          <div class="race-name">Australia</div><div class="race-date">Mar 6–8</div>
+          <div class="race-dot"></div>
+        </div>
+        <div class="race-card" data-race="2" onclick="selectRace(this,2)" tabindex="0">
+          <div class="race-flag">🇨🇳</div><div class="race-rnd">R02</div>
+          <div class="race-name">China</div><div class="race-date">Mar 13–15</div>
+          <div class="race-dot"></div>
+          <div class="race-badges"><span class="badge-sprint">Sprint</span></div>
+        </div>
+        <div class="race-card" data-race="3" onclick="selectRace(this,3)" tabindex="0">
+          <div class="race-flag">🇯🇵</div><div class="race-rnd">R03</div>
+          <div class="race-name">Japan</div><div class="race-date">Mar 27–29</div>
+          <div class="race-dot"></div>
+        </div>
+        <div class="race-card upcoming" data-race="6">
+          <div class="race-flag">🇺🇸</div><div class="race-rnd">R06</div>
+          <div class="race-name">Miami</div><div class="race-date">May 8–10</div>
+          <div class="race-badges"><span class="badge-next">Next</span><span class="badge-sprint">Sprint</span></div>
+        </div>
+        <div class="race-card upcoming" data-race="7">
+          <div class="race-flag">🇨🇦</div><div class="race-rnd">R07</div>
+          <div class="race-name">Canada</div><div class="race-date">May 22–24</div>
+          <div class="race-badges"><span class="badge-sprint">Sprint</span></div>
+        </div>
+        <div class="race-card upcoming" data-race="8">
+          <div class="race-flag">🇲🇨</div><div class="race-rnd">R08</div>
+          <div class="race-name">Monaco</div><div class="race-date">Jun 5–7</div>
+        </div>
+        <div class="race-card upcoming" data-race="9">
+          <div class="race-flag">🇧🇪</div><div class="race-rnd">R09</div>
+          <div class="race-name">Belgium</div><div class="race-date">Jun 19–21</div>
+        </div>
+        <div class="race-card upcoming" data-race="10">
+          <div class="race-flag">🇬🇧</div><div class="race-rnd">R10</div>
+          <div class="race-name">Britain</div><div class="race-date">Jul 3–5</div>
+          <div class="race-badges"><span class="badge-sprint">Sprint</span></div>
+        </div>
+        <div class="race-card upcoming" data-race="11">
+          <div class="race-flag">🇦🇹</div><div class="race-rnd">R11</div>
+          <div class="race-name">Austria</div><div class="race-date">Jul 17–19</div>
+        </div>
+        <div class="race-card upcoming" data-race="12">
+          <div class="race-flag">🇭🇺</div><div class="race-rnd">R12</div>
+          <div class="race-name">Hungary</div><div class="race-date">Jul 31–Aug 2</div>
+        </div>
+        <div class="race-card upcoming" data-race="13">
+          <div class="race-flag">🇳🇱</div><div class="race-rnd">R13</div>
+          <div class="race-name">Netherlands</div><div class="race-date">Aug 28–30</div>
+          <div class="race-badges"><span class="badge-sprint">Sprint</span></div>
+        </div>
+        <div class="race-card upcoming" data-race="14">
+          <div class="race-flag">🇮🇹</div><div class="race-rnd">R14</div>
+          <div class="race-name">Italy</div><div class="race-date">Sep 4–6</div>
+        </div>
+        <div class="race-card upcoming" data-race="15">
+          <div class="race-flag">🇪🇸</div><div class="race-rnd">R15</div>
+          <div class="race-name">Madrid</div><div class="race-date">Sep 11–13</div>
+          <div class="race-badges"><span class="badge-new">New</span></div>
+        </div>
+        <div class="race-card upcoming" data-race="16">
+          <div class="race-flag">🇪🇸</div><div class="race-rnd">R16</div>
+          <div class="race-name">Barcelona</div><div class="race-date">Sep 25–27</div>
+        </div>
+        <div class="race-card upcoming" data-race="17">
+          <div class="race-flag">🇦🇿</div><div class="race-rnd">R17</div>
+          <div class="race-name">Azerbaijan</div><div class="race-date">Oct 3</div>
+        </div>
+        <div class="race-card upcoming" data-race="18">
+          <div class="race-flag">🇸🇬</div><div class="race-rnd">R18</div>
+          <div class="race-name">Singapore</div><div class="race-date">Oct 16–18</div>
+          <div class="race-badges"><span class="badge-sprint">Sprint</span></div>
+        </div>
+        <div class="race-card upcoming" data-race="19">
+          <div class="race-flag">🇺🇸</div><div class="race-rnd">R19</div>
+          <div class="race-name">Austin</div><div class="race-date">Oct 23–25</div>
+        </div>
+        <div class="race-card upcoming" data-race="20">
+          <div class="race-flag">🇲🇽</div><div class="race-rnd">R20</div>
+          <div class="race-name">Mexico</div><div class="race-date">Oct 30–Nov 1</div>
+        </div>
+        <div class="race-card upcoming" data-race="21">
+          <div class="race-flag">🇧🇷</div><div class="race-rnd">R21</div>
+          <div class="race-name">Brazil</div><div class="race-date">Nov 13–15</div>
+        </div>
+        <div class="race-card upcoming" data-race="22">
+          <div class="race-flag">🇺🇸</div><div class="race-rnd">R22</div>
+          <div class="race-name">Las Vegas</div><div class="race-date">Nov 19–21</div>
+        </div>
+        <div class="race-card upcoming" data-race="23">
+          <div class="race-flag">🇶🇦</div><div class="race-rnd">R23</div>
+          <div class="race-name">Qatar</div><div class="race-date">Nov 27–29</div>
+        </div>
+        <div class="race-card upcoming" data-race="24">
+          <div class="race-flag">🇦🇪</div><div class="race-rnd">R24</div>
+          <div class="race-name">Abu Dhabi</div><div class="race-date">Dec 4–6</div>
+        </div>
+      </div>
+
+      <div style="margin-top:36px;">
+        <div class="podium-header">
+          <div>
+            <div class="section-eyebrow" id="podiumEyebrow">Australian Grand Prix · R01</div>
+            <div class="section-h" style="margin-bottom:0;">Race Podium</div>
+          </div>
+          <div class="sprint-toggle" id="sprintToggle" style="display:none;">
+            <button class="stbtn active" onclick="setSprintMode('race')">Race</button>
+            <button class="stbtn" onclick="setSprintMode('sprint')">Sprint</button>
+          </div>
+        </div>
+        <div class="podium-grid">
+          <div class="podium-card p1">
+            <div class="podium-num">P1</div>
+            <div class="podium-driver" id="p1driver">—</div>
+            <div class="podium-team"><div class="team-dot" id="p1dot"></div><span id="p1team">—</span></div>
+            <div class="podium-gap" id="p1time">—</div>
+          </div>
+          <div class="podium-card p2">
+            <div class="podium-num">P2</div>
+            <div class="podium-driver" id="p2driver">—</div>
+            <div class="podium-team"><div class="team-dot" id="p2dot"></div><span id="p2team">—</span></div>
+            <div class="podium-gap" id="p2time">—</div>
+          </div>
+          <div class="podium-card p3">
+            <div class="podium-num">P3</div>
+            <div class="podium-driver" id="p3driver">—</div>
+            <div class="podium-team"><div class="team-dot" id="p3dot"></div><span id="p3team">—</span></div>
+            <div class="podium-gap" id="p3time">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:36px;">
+        <div class="section-eyebrow" style="margin-bottom:14px;">Full Classification</div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>Pos</th><th>Driver</th><th>Team</th>
+                <th>Laps</th><th>Time / Gap</th><th>Pts</th>
+              </tr>
+            </thead>
+            <tbody id="resultsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STANDINGS TAB -->
+  <div class="tab-content" id="tab-standings">
+    <div class="standings-wrap">
+      <div class="section-eyebrow">2026 Season · After Round 3</div>
+      <div class="section-h">Championship Standings</div>
+      <div class="subtabs">
+        <div class="subtab active" data-sub="drivers"      onclick="switchSub('drivers')">Drivers</div>
+        <div class="subtab"        data-sub="constructors" onclick="switchSub('constructors')">Constructors</div>
+      </div>
+      <div id="sub-drivers">
+        <table class="stbl">
+          <thead><tr><th>Pos</th><th class="bar-cell"></th><th>Driver</th><th class="nat-cell">Nat</th><th class="r">Pts</th></tr></thead>
+          <tbody id="drvBody"></tbody>
+        </table>
+      </div>
+      <div id="sub-constructors" style="display:none;">
+        <table class="stbl">
+          <thead><tr><th>Pos</th><th class="bar-cell"></th><th>Team</th><th class="r">Pts</th></tr></thead>
+          <tbody id="ctrBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAT TAB -->
+  <div class="tab-content" id="tab-chat">
+    <div class="chat-outer">
+      <div class="chat-head">
+        <div class="chat-head-left">
+          <div class="chat-title">F1 AI Analyst</div>
+          <div class="chat-sub">2026 Season Intelligence · Powered by FastF1 &amp; OpenF1</div>
+        </div>
+        <div class="live-pill"><div class="live-dot"></div>Live</div>
+      </div>
+      <div class="chat-messages" id="chatMsgs">
+        <div class="msg bot">
+          <div class="msg-avatar">F1</div>
+          <div class="msg-body">
+            <div class="msg-from">F1 Analyst · AI</div>
+            <div class="msg-text">Ask me anything about the 2026 season — race strategy, standings, circuit history, or predictions.</div>
+          </div>
+        </div>
+      </div>
+      <div class="chat-suggestions">
+        <div class="sug-pill" onclick="setPrompt(this)">Who leads the championship?</div>
+        <div class="sug-pill" onclick="setPrompt(this)">Explain DRS zones at Miami</div>
+        <div class="sug-pill" onclick="setPrompt(this)">Best strategy for Monaco?</div>
+      </div>
+      <div class="chat-input-row">
+        <input type="text" id="chatInput" class="chat-input" placeholder="Ask about the 2026 season..." onkeydown="if(event.key==='Enter')sendMsg()" autocomplete="off">
+        <button class="chat-send" onclick="sendMsg()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+          Send
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PREDICTIONS TAB -->
+  <div class="tab-content" id="tab-predictions">
+    <div class="pred-wrap">
+      <div class="section-eyebrow">ML-Powered Analytics</div>
+      <div class="section-h">Race Predictions</div>
+      <p style="margin-top:-16px;margin-bottom:36px;color:var(--g500);font-size:13px;">Model training in progress · Data sourced from FastF1 + OpenF1 API</p>
+      <div class="pred-grid">
+        <div class="pred-card">
+          <div class="pred-card-num">Model 01</div>
+          <div class="pred-card-title">Tire Degradation Model</div>
+          <div class="pred-card-status">Status: Building · Week 7 of Training</div>
+          <div class="pred-track"><div class="pred-fill" style="width:0%" data-target="22"></div></div>
+          <div class="pred-footer">
+            <span class="pred-pct">22% Complete</span>
+            <button class="notify-btn" data-tip="Coming soon">Notify Me</button>
+          </div>
+        </div>
+        <div class="pred-card">
+          <div class="pred-card-num">Model 02</div>
+          <div class="pred-card-title">Race Winner Prediction</div>
+          <div class="pred-card-status">Status: Building · Week 8 of Training</div>
+          <div class="pred-track"><div class="pred-fill" style="width:0%" data-target="18"></div></div>
+          <div class="pred-footer">
+            <span class="pred-pct">18% Complete</span>
+            <button class="notify-btn" data-tip="Coming soon">Notify Me</button>
+          </div>
+        </div>
+        <div class="pred-card">
+          <div class="pred-card-num">Model 03</div>
+          <div class="pred-card-title">Strategy Optimizer</div>
+          <div class="pred-card-status">Status: Coming Soon</div>
+          <div class="pred-track"><div class="pred-fill" style="width:0%;background:var(--s3);" data-target="0"></div></div>
+          <div class="pred-footer">
+            <span class="pred-pct" style="color:var(--g700);">Not Started</span>
+            <button class="notify-btn" data-tip="Coming soon">Notify Me</button>
+          </div>
+        </div>
+        <div class="pred-card">
+          <div class="pred-card-num">Model 04</div>
+          <div class="pred-card-title">Live Race Predictions</div>
+          <div class="pred-card-status">Status: Coming Soon</div>
+          <div class="pred-track"><div class="pred-fill" style="width:0%;background:var(--s3);" data-target="0"></div></div>
+          <div class="pred-footer">
+            <span class="pred-pct" style="color:var(--g700);">Not Started</span>
+            <button class="notify-btn" data-tip="Coming soon">Notify Me</button>
+          </div>
+        </div>
+      </div>
+      <div class="about-section">
+        <div class="section-eyebrow">Technical Overview</div>
+        <div class="section-h" style="font-size:24px;margin-bottom:0;">About the Models</div>
+        <div class="about-grid">
+          <div class="about-card">
+            <div class="about-card-lbl">Data Pipeline</div>
+            <div class="about-card-title">FastF1 Integration</div>
+            <p>All historical race data is sourced via the FastF1 Python library, providing lap times, telemetry, tire compounds, and sector splits for every race since 2018.</p>
+          </div>
+          <div class="about-card">
+            <div class="about-card-lbl">ML Framework</div>
+            <div class="about-card-title">XGBoost Models</div>
+            <p>Gradient boosted decision trees power the predictive layer. Features include circuit characteristics, driver consistency scores, team performance metrics, and weather conditions.</p>
+          </div>
+          <div class="about-card">
+            <div class="about-card-lbl">Live Data</div>
+            <div class="about-card-title">OpenF1 API</div>
+            <p>Real-time race data is streamed via the OpenF1 public API, enabling live position tracking, gap calculations, and in-race strategy updates.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+console.log('F1 2026 Analytics — built by Harshith');
+
+const teamColors = {
+  mercedes:      '#27F4D2',
+  ferrari:       '#E8002D',
+  red_bull:      '#3671C6',
+  mclaren:       '#FF8000',
+  aston_martin:  '#358C75',
+  alpine:        '#0093CC',
+  williams:      '#64C4FF',
+  haas:          '#B6BABD',
+  audi:          '#DBD900',
+  rb:            '#6692FF',
+  cadillac:      '#B400FF'
+};
+
+const SPRINT_ROUNDS = [2, 6, 7, 10, 13, 18];
+
+let currentRace = 1;
+let sprintMode  = 'race';
+
+/* ── TAB SWITCHING ── */
+function switchTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-links a, .mobile-menu a').forEach(a => {
+    a.classList.toggle('active', a.dataset.tab === name);
+  });
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'standings') setTimeout(animateRows, 60);
+  if (name === 'predictions') setTimeout(animatePredBars, 120);
+}
+
+/* ── MOBILE MENU ── */
+function toggleMenu() {
+  const m = document.getElementById('mobileMenu');
+  const h = document.getElementById('ham');
+  const open = m.classList.toggle('open');
+  h.classList.toggle('open', open);
+}
+function closeMenu() {
+  document.getElementById('mobileMenu').classList.remove('open');
+  document.getElementById('ham').classList.remove('open');
+}
+
+/* ── RACE SELECTOR ── */
+function selectRace(el, num) {
+  if (el.classList.contains('upcoming')) return;
+  document.querySelectorAll('.race-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  currentRace = num;
+  sprintMode  = 'race';
+  document.querySelectorAll('.stbtn').forEach((b,i) => b.classList.toggle('active', i === 0));
+  updatePodium();
+  updateSprintToggle();
+}
+
+function updateSprintToggle() {
+  const isSprint = SPRINT_ROUNDS.includes(currentRace);
+  document.getElementById('sprintToggle').style.display = isSprint ? 'flex' : 'none';
+}
+
+function setSprintMode(mode) {
+  sprintMode = mode;
+  document.querySelectorAll('.stbtn').forEach(b => {
+    b.classList.toggle('active', b.textContent.toLowerCase() === mode);
+  });
+  updatePodium();
+}
+
+/* ── PODIUM + FULL RESULTS ── */
+function updatePodium() {
+  const endpoint = sprintMode === 'sprint'
+    ? `https://api.jolpi.ca/ergast/f1/2026/${currentRace}/sprint/`
+    : `https://api.jolpi.ca/ergast/f1/2026/${currentRace}/results/`;
+
+  fetch(endpoint)
+    .then(res => res.json())
+    .then(data => {
+      const races = data.MRData.RaceTable.Races;
+      if (!races || races.length === 0) return;
+      const race    = races[0];
+      const results = sprintMode === 'sprint' ? race.SprintResults : race.Results;
+      if (!results || results.length === 0) return;
+
+      document.getElementById('podiumEyebrow').textContent =
+        race.raceName + ' · R' + String(currentRace).padStart(2, '0');
+
+      [0, 1, 2].forEach(i => {
+        const r = results[i];
+        if (!r) return;
+        const p = ['p1','p2','p3'][i];
+        document.getElementById(p+'driver').textContent =
+          r.Driver.givenName[0] + '. ' + r.Driver.familyName;
+        document.getElementById(p+'team').textContent = r.Constructor.name;
+        document.getElementById(p+'dot').style.background =
+          teamColors[r.Constructor.constructorId] || '#fff';
+        document.getElementById(p+'time').textContent =
+          r.Time ? r.Time.time : r.status;
+      });
+
+      const tb = document.getElementById('resultsBody');
+      tb.innerHTML = '';
+      results.forEach(r => {
+        const color = teamColors[r.Constructor.constructorId] || '#fff';
+        const time  = r.Time ? r.Time.time : r.status;
+        const tr    = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="color:var(--g400);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;">${r.position}</td>
+          <td>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;">
+              ${r.Driver.givenName[0]}. ${r.Driver.familyName}
+              <span style="font-size:11px;color:var(--g600);margin-left:6px;">${r.Driver.code}</span>
+            </div>
+          </td>
+          <td>
+            <div style="display:flex;align-items:center;gap:7px;">
+              <div style="width:3px;height:16px;border-radius:2px;background:${color};flex-shrink:0;"></div>
+              ${r.Constructor.name}
+            </div>
+          </td>
+          <td style="color:var(--g500);">${r.laps}</td>
+          <td style="font-variant-numeric:tabular-nums;color:var(--g300);">${time}</td>
+          <td style="font-family:'Barlow Condensed',sans-serif;font-weight:700;">${r.points}</td>`;
+        tb.appendChild(tr);
+      });
+    })
+    .catch(err => console.error('Results fetch error:', err));
+}
+
+/* ── STANDINGS ── */
+function buildDrivers() {
+  fetch('https://api.jolpi.ca/ergast/f1/2026/3/driverstandings/')
+    .then(res => res.json())
+    .then(data => {
+      const drivers = data.MRData.StandingsTable.StandingsLists[0].DriverStandings;
+      const tb = document.getElementById('drvBody');
+      tb.innerHTML = '';
+      drivers.forEach((d, i) => {
+        const tr = document.createElement('tr');
+        tr.className = 'srow';
+        tr.style.animationDelay = i * 38 + 'ms';
+        const color = teamColors[d.Constructors[0].constructorId] || '#fff';
+        tr.innerHTML = `
+          <td class="pos-cell ${i < 3 ? 'hi' : ''}">${String(i+1).padStart(2,'0')}</td>
+          <td class="bar-cell"><div class="team-bar" style="background:${color}"></div></td>
+          <td class="driver-cell">
+            <div class="d-name">${d.Driver.givenName} ${d.Driver.familyName}
+              <span class="d-abbr">${d.Driver.code}</span>
+            </div>
+            <div class="d-team">${d.Constructors[0].name}</div>
+          </td>
+          <td class="nat-cell"></td>
+          <td class="pts-cell">${d.points}</td>`;
+        tb.appendChild(tr);
+      });
+    })
+    .catch(err => console.error('Driver standings error:', err));
+}
+
+function buildConstructors() {
+  fetch('https://api.jolpi.ca/ergast/f1/2026/3/constructorstandings/')
+    .then(res => res.json())
+    .then(data => {
+      const teams = data.MRData.StandingsTable.StandingsLists[0].ConstructorStandings;
+      const tb = document.getElementById('ctrBody');
+      tb.innerHTML = '';
+      teams.forEach((c, i) => {
+        const tr = document.createElement('tr');
+        tr.className = 'srow';
+        tr.style.animationDelay = i * 38 + 'ms';
+        const color = teamColors[c.Constructor.constructorId] || '#fff';
+        tr.innerHTML = `
+          <td class="pos-cell ${i < 3 ? 'hi' : ''}">${String(i+1).padStart(2,'0')}</td>
+          <td class="bar-cell"><div class="team-bar" style="background:${color}"></div></td>
+          <td class="team-cell">
+            <div class="t-name">${c.Constructor.name}</div>
+            <div class="t-drivers">${c.points} pts</div>
+          </td>
+          <td class="pts-cell">${c.points}</td>`;
+        tb.appendChild(tr);
+      });
+    })
+    .catch(err => console.error('Constructor standings error:', err));
+}
+
+function switchSub(name) {
+  document.querySelectorAll('.subtab').forEach(t => t.classList.toggle('active', t.dataset.sub === name));
+  document.getElementById('sub-drivers').style.display      = name === 'drivers'      ? 'block' : 'none';
+  document.getElementById('sub-constructors').style.display = name === 'constructors' ? 'block' : 'none';
+  setTimeout(animateRows, 40);
+}
+
+function animateRows() {
+  document.querySelectorAll('.srow').forEach((r, i) => {
+    r.style.animation = 'none';
+    void r.offsetWidth;
+    r.style.animation = '';
+    r.style.animationDelay = i * 38 + 'ms';
+  });
+}
+
+/* ── CHAT ── */
+function setPrompt(el) {
+  const inp = document.getElementById('chatInput');
+  inp.value = el.textContent.trim();
+  inp.focus();
+}
+
+function sendMsg() {
+  const inp  = document.getElementById('chatInput');
+  const text = inp.value.trim();
+  if (!text) return;
+  const box = document.getElementById('chatMsgs');
+  box.insertAdjacentHTML('beforeend', `
+    <div class="msg">
+      <div class="msg-avatar user">YOU</div>
+      <div class="msg-body">
+        <div class="msg-from">You</div>
+        <div class="msg-text">${esc(text)}</div>
+      </div>
+    </div>`);
+  inp.value = '';
+  box.scrollTop = box.scrollHeight;
+  setTimeout(() => {
+    box.insertAdjacentHTML('beforeend', `
+      <div class="msg bot">
+        <div class="msg-avatar">F1</div>
+        <div class="msg-body">
+          <div class="msg-from">F1 Analyst · AI</div>
+          <div class="msg-text muted">AI integration coming soon — this will connect to a live model trained on 2026 season data, FastF1 telemetry, and real-time OpenF1 streams.</div>
+        </div>
+      </div>`);
+    box.scrollTop = box.scrollHeight;
+  }, 640);
+}
+
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── PREDICTIONS ── */
+function animatePredBars() {
+  document.querySelectorAll('.pred-fill[data-target]').forEach(bar => {
+    const t = parseInt(bar.dataset.target, 10);
+    if (t > 0) bar.style.width = t + '%';
+  });
+}
+
+/* ── INIT ── */
+buildDrivers();
+buildConstructors();
+updateSprintToggle();
+updatePodium();
+</script>
+</body>
+</html>
