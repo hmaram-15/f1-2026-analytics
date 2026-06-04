@@ -260,11 +260,11 @@
     }
     .hero-bg-num {
       position: absolute;
-      right: -20px;
+      right: 20px;
       top: 50%;
       transform: translateY(-50%);
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: clamp(140px, 20vw, 240px);
+      font-size: clamp(120px, 14vw, 200px);
       font-weight: 700;
       color: var(--s1);
       line-height: 1;
@@ -309,7 +309,7 @@
       margin-bottom: 6px;
     }
     .hero-progress-track { height: 2px; background: var(--s3); border-radius: 2px; overflow: hidden; }
-    .hero-progress-fill  { height: 100%; width: 13.6%; background: var(--red); border-radius: 2px; }
+    .hero-progress-fill  { height: 100%; width: 0%; background: var(--red); border-radius: 2px; }
 
     .map-container {
       position: relative;
@@ -320,6 +320,17 @@
     }
     #f1map { width: 100%; height: 100%; }
     .map-badge { position: absolute; top: 18px; right: 18px; z-index: 1001; }
+    .map-scroll-hint {
+      position: absolute; bottom: 14px; right: 14px; z-index: 1002;
+      background: rgba(10,10,10,0.72); color: rgba(255,255,255,0.65);
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+      font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 5px 12px; border-radius: 3px;
+      border: 1px solid rgba(255,255,255,0.1);
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+    }
+    .map-scroll-hint.hidden { opacity: 0; }
     .circuit-card {
       position: absolute;
       bottom: 20px; left: 20px;
@@ -794,14 +805,14 @@
       <div class="hero-bg-num" aria-hidden="true">2026</div>
       <div class="hero-label">2026 FIA Formula One World Championship</div>
       <h1 class="hero-title">Formula&nbsp;1<br>World&nbsp;Championship</h1>
-      <p class="hero-sub"><strong>Round 4 of 22</strong> &nbsp;·&nbsp; Miami Grand Prix &nbsp;·&nbsp; May 8–10, 2026</p>
+      <p class="hero-sub" id="heroSub"><strong>Round 4 of 22</strong> &nbsp;·&nbsp; Miami Grand Prix &nbsp;·&nbsp; May 8–10, 2026</p>
       <div class="hero-pills">
-        <div class="pill"><div class="pill-dot"></div>3 Races Complete</div>
-        <div class="pill"><div class="pill-dot pill-dot--green pill-dot--pulse"></div>Next: Miami Sprint Weekend</div>
+        <div class="pill" id="heroPillComplete"><div class="pill-dot"></div><span id="heroPillCompleteText">3 Races Complete</span></div>
+        <div class="pill" id="heroPillNext"><div class="pill-dot pill-dot--green pill-dot--pulse"></div><span id="heroPillNextText">Next: Miami Sprint Weekend</span></div>
       </div>
       <div class="hero-progress">
-        <div class="hero-progress-label"><span>Season Progress</span><span>3 / 22</span></div>
-        <div class="hero-progress-track"><div class="hero-progress-fill"></div></div>
+        <div class="hero-progress-label"><span>Season Progress</span><span id="heroProgressCount">3 / 22</span></div>
+        <div class="hero-progress-track"><div class="hero-progress-fill" id="heroProgressFill"></div></div>
       </div>
     </div>
     <hr class="divider">
@@ -810,6 +821,7 @@
       <div class="map-badge">
         <div class="badge-live"><div class="live-dot"></div>Live · 2026 Calendar</div>
       </div>
+      <div class="map-scroll-hint" id="mapScrollHint">Click map to zoom</div>
       <div class="circuit-card" id="circuitCard">
         <div class="circuit-card-round" id="cardRound">2026 Season · 22 Rounds</div>
         <div class="circuit-card-name" id="cardName">Click a pin</div>
@@ -1610,8 +1622,16 @@ function initMap() {
   const latest    = completed[completed.length - 1] || null;
   const next      = upcoming[0] || null;
 
-  f1Map = L.map('f1map', { zoomControl: true, scrollWheelZoom: true });
+  f1Map = L.map('f1map', { zoomControl: true, scrollWheelZoom: false });
   f1Map.setView([25, 15], 2);
+
+  f1Map.on('focus', function() { f1Map.scrollWheelZoom.enable(); });
+  f1Map.on('blur',  function() { f1Map.scrollWheelZoom.disable(); });
+  f1Map.on('click', function() {
+    f1Map.scrollWheelZoom.enable();
+    const hint = document.getElementById('mapScrollHint');
+    if (hint) hint.classList.add('hidden');
+  });
 
   L.tileLayer(
     'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
@@ -1685,11 +1705,40 @@ function initMap() {
 }
 
 /* ── INIT ── */
+function updateHero() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const total = CIRCUITS.length;
+  const n     = CIRCUITS.filter(c => circuitEndDate(c) < today).length;
+  const next  = CIRCUITS.find(c => circuitEndDate(c) >= today);
+
+  document.getElementById('heroSub').innerHTML = next
+    ? `<strong>Round ${next.round} of ${total}</strong> &nbsp;·&nbsp; ${next.name} &nbsp;·&nbsp; ${next.date}, 2026`
+    : `<strong>Round ${total} of ${total}</strong> &nbsp;·&nbsp; Season Complete`;
+
+  document.getElementById('heroPillCompleteText').textContent =
+    `${n} Race${n !== 1 ? 's' : ''} Complete`;
+
+  const nextPill     = document.getElementById('heroPillNext');
+  const nextPillText = document.getElementById('heroPillNextText');
+  if (next) {
+    nextPillText.textContent = next.sprint
+      ? `Next: ${next.name} Sprint Weekend`
+      : `Next: ${next.name}`;
+  } else {
+    nextPill.style.display = 'none';
+  }
+
+  document.getElementById('heroProgressCount').textContent = `${n} / ${total}`;
+  document.getElementById('heroProgressFill').style.width  = (n / total * 100).toFixed(1) + '%';
+}
+
 buildDrivers();
 buildConstructors();
 autoSelectRace();
 updateSprintToggle();
 updatePodium();
+updateHero();
 initMap();
 </script>
 </body>
