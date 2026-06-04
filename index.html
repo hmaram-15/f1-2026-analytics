@@ -311,6 +311,46 @@
     .hero-progress-track { height: 2px; background: var(--s3); border-radius: 2px; overflow: hidden; }
     .hero-progress-fill  { height: 100%; width: 0%; background: var(--red); border-radius: 2px; }
 
+    .hero-countdown {
+      display: flex; align-items: center; gap: 14px;
+      margin-top: 24px; flex-wrap: wrap;
+    }
+    .countdown-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--g500); white-space: nowrap;
+    }
+    .countdown-units { display: flex; align-items: center; gap: 6px; }
+    .countdown-unit {
+      background: var(--s2); border: 1px solid var(--border);
+      border-radius: 4px; padding: 8px 14px; text-align: center;
+      min-width: 58px;
+    }
+    .countdown-num {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 32px; font-weight: 700;
+      color: var(--white); line-height: 1; letter-spacing: 0.02em;
+    }
+    .countdown-unit-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 10px; font-weight: 600;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--g500); margin-top: 3px;
+    }
+    .countdown-sep {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 22px; font-weight: 700;
+      color: var(--g600); padding-bottom: 14px;
+    }
+    .countdown-weekend {
+      display: flex; align-items: center; gap: 8px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 16px; font-weight: 700;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--red);
+    }
+
     .map-container {
       position: relative;
       width: 100%;
@@ -369,6 +409,18 @@
       color: var(--white); margin-bottom: 4px;
     }
     .circuit-card-info { font-size: 12px; color: var(--g500); line-height: 1.6; }
+    .card-results-btn {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      width: 100%; margin-top: 12px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 12px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--red); background: transparent;
+      border: 1px solid rgba(232,0,45,0.35); border-radius: 3px;
+      padding: 7px 12px; cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+    .card-results-btn:hover { background: rgba(232,0,45,0.1); border-color: var(--red); }
     .map-legend {
       display: flex; flex-wrap: wrap; gap: 20px;
       padding: 14px 28px;
@@ -420,6 +472,7 @@
     .race-card:hover:not(.upcoming) { background: var(--s2); border-color: var(--border-hi); }
     .race-card.selected  { border-color: var(--red); background: var(--red-a08); }
     .race-card.upcoming  { opacity: 0.38; cursor: default; }
+    .race-card:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--red), 0 0 0 4px rgba(232,0,45,0.2); }
     .race-flag   { font-size: 19px; margin-bottom: 7px; line-height: 1; }
     .race-rnd    { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--g600); margin-bottom: 3px; }
     .race-name   { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; text-transform: uppercase; color: var(--white); line-height: 1.15; margin-bottom: 4px; }
@@ -432,6 +485,28 @@
       justify-content: space-between;
       margin-bottom: 18px; gap: 16px; flex-wrap: wrap;
     }
+    .share-btn {
+      display: flex; align-items: center; gap: 5px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--g500); background: transparent;
+      border: 1px solid var(--border); border-radius: 2px;
+      padding: 5px 10px; cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .share-btn:hover { color: var(--white); border-color: var(--border-hi); }
+    .share-tooltip {
+      position: absolute; bottom: calc(100% + 7px); left: 50%;
+      transform: translateX(-50%);
+      background: var(--s3); color: var(--white);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 4px 10px; border-radius: 2px;
+      white-space: nowrap; pointer-events: none;
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .share-tooltip.visible { opacity: 1; }
     .sprint-toggle {
       display: flex; gap: 2px;
       background: var(--s1);
@@ -810,6 +885,7 @@
         <div class="pill" id="heroPillComplete"><div class="pill-dot"></div><span id="heroPillCompleteText">3 Races Complete</span></div>
         <div class="pill" id="heroPillNext"><div class="pill-dot pill-dot--green pill-dot--pulse"></div><span id="heroPillNextText">Next: Miami Sprint Weekend</span></div>
       </div>
+      <div id="heroCountdown" class="hero-countdown"></div>
       <div class="hero-progress">
         <div class="hero-progress-label"><span>Season Progress</span><span id="heroProgressCount">3 / 22</span></div>
         <div class="hero-progress-track"><div class="hero-progress-fill" id="heroProgressFill"></div></div>
@@ -828,6 +904,7 @@
         <div class="circuit-card-info" id="cardInfo"></div>
         <div class="circuit-card-info" id="cardBadges" style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;min-height:18px;"></div>
         <div class="circuit-card-info" id="cardWinner" style="margin-top:4px;color:var(--g400);"></div>
+        <button class="card-results-btn" id="cardResultsBtn" style="display:none;">View Results →</button>
       </div>
     </div>
     <div class="map-legend">
@@ -955,9 +1032,18 @@
             <div class="section-eyebrow" id="podiumEyebrow">Australian Grand Prix · R01</div>
             <div class="section-h" style="margin-bottom:0;">Race Podium</div>
           </div>
-          <div class="sprint-toggle" id="sprintToggle" style="display:none;">
-            <button class="stbtn active" onclick="setSprintMode('race')">Race</button>
-            <button class="stbtn" onclick="setSprintMode('sprint')">Sprint</button>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="sprint-toggle" id="sprintToggle" style="display:none;">
+              <button class="stbtn active" onclick="setSprintMode('race')">Race</button>
+              <button class="stbtn" onclick="setSprintMode('sprint')">Sprint</button>
+            </div>
+            <div style="position:relative;">
+              <button class="share-btn" onclick="shareRace()" title="Copy race link">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                Share
+              </button>
+              <span class="share-tooltip" id="shareTooltip">Copied!</span>
+            </div>
           </div>
         </div>
         <div class="podium-grid">
@@ -1611,7 +1697,43 @@ function updateCircuitCard(c, status, isNext) {
   const cardWinner = document.getElementById('cardWinner');
   cardWinner.textContent = '';
   if (status === 'completed') fetchWinnerAndUpdate(c.round, null, cardWinner);
+
+  const btn = document.getElementById('cardResultsBtn');
+  if (btn) {
+    btn.style.display = status === 'completed' ? 'flex' : 'none';
+    btn.onclick = () => goToRaceResults(c.round);
+  }
 }
+
+function goToRaceResults(round) {
+  const card = document.querySelector('.race-card[data-race="' + round + '"]');
+  switchTab('results');
+  if (card) selectRace(card, round);
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  const resultsTab = document.getElementById('tab-results');
+  if (!resultsTab || !resultsTab.classList.contains('active')) return;
+  const tag = document.activeElement && document.activeElement.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+
+  const completed = Array.from(document.querySelectorAll('.race-card:not(.upcoming)'));
+  if (!completed.length) return;
+
+  const cur  = completed.findIndex(c => c.classList.contains('selected'));
+  const next = e.key === 'ArrowLeft'
+    ? Math.max(0, cur - 1)
+    : Math.min(completed.length - 1, cur + 1);
+
+  if (next === cur) return;
+  e.preventDefault();
+
+  const card = completed[next];
+  selectRace(card, parseInt(card.dataset.race, 10));
+  card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  card.focus({ preventScroll: true });
+});
 
 function initMap() {
   if (f1Map) return;
@@ -1733,13 +1855,81 @@ function updateHero() {
   document.getElementById('heroProgressFill').style.width  = (n / total * 100).toFixed(1) + '%';
 }
 
+function startHeroCountdown() {
+  const el = document.getElementById('heroCountdown');
+  if (!el) return;
+
+  const pad = n => String(n).padStart(2, '0');
+
+  const tick = () => {
+    const now   = new Date();
+    const today = new Date(now); today.setHours(0, 0, 0, 0);
+    const next  = CIRCUITS.find(c => circuitEndDate(c) >= today);
+
+    if (!next) { el.style.display = 'none'; return; }
+
+    // Weekend runs from (end - 2 days) through end of end day
+    const endDay  = circuitEndDate(next);
+    const wkStart = new Date(endDay); wkStart.setDate(wkStart.getDate() - 2);
+    const wkEnd   = new Date(endDay); wkEnd.setDate(wkEnd.getDate() + 1);
+
+    if (now >= wkStart && now < wkEnd) {
+      el.innerHTML = `<div class="countdown-weekend"><div class="live-dot"></div>Race Weekend Live</div>`;
+      return;
+    }
+
+    const diff    = wkStart - now;
+    const days    = Math.floor(diff / 86400000);
+    const hours   = Math.floor((diff % 86400000) / 3600000);
+    const minutes = Math.floor((diff % 3600000) / 60000);
+    const seconds = Math.floor((diff % 60000) / 1000);
+
+    el.innerHTML = `
+      <span class="countdown-label">Next Race In</span>
+      <div class="countdown-units">
+        <div class="countdown-unit"><div class="countdown-num">${pad(days)}</div><div class="countdown-unit-label">D</div></div>
+        <div class="countdown-sep">:</div>
+        <div class="countdown-unit"><div class="countdown-num">${pad(hours)}</div><div class="countdown-unit-label">H</div></div>
+        <div class="countdown-sep">:</div>
+        <div class="countdown-unit"><div class="countdown-num">${pad(minutes)}</div><div class="countdown-unit-label">M</div></div>
+        <div class="countdown-sep">:</div>
+        <div class="countdown-unit"><div class="countdown-num">${pad(seconds)}</div><div class="countdown-unit-label">S</div></div>
+      </div>`;
+  };
+
+  tick();
+  setInterval(tick, 1000);
+}
+
+function shareRace() {
+  const url = new URL(window.location.href);
+  url.searchParams.set('race', currentRace);
+  navigator.clipboard.writeText(url.toString()).then(() => {
+    const tip = document.getElementById('shareTooltip');
+    tip.classList.add('visible');
+    setTimeout(() => tip.classList.remove('visible'), 1500);
+  });
+}
+
 buildDrivers();
 buildConstructors();
 autoSelectRace();
 updateSprintToggle();
 updatePodium();
 updateHero();
+startHeroCountdown();
 initMap();
+
+// Auto-select race from ?race= URL param
+const _raceParam = new URLSearchParams(window.location.search).get('race');
+if (_raceParam) {
+  const _num  = parseInt(_raceParam, 10);
+  const _card = document.querySelector('.race-card[data-race="' + _num + '"]');
+  if (_card && !_card.classList.contains('upcoming')) {
+    switchTab('results');
+    selectRace(_card, _num);
+  }
+}
 </script>
 </body>
 </html>
