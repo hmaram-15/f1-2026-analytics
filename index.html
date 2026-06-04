@@ -7,6 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
     :root {
@@ -316,36 +318,8 @@
       background: var(--s1);
       overflow: hidden;
     }
-    .map-grid {
-      position: absolute; inset: 0;
-      background-image:
-        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-      background-size: 48px 48px;
-    }
-    .map-grid-major {
-      position: absolute; inset: 0;
-      background-image:
-        linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
-      background-size: 192px 192px;
-    }
-    .map-center {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-    }
-    .map-center svg { opacity: 0.12; margin-bottom: 14px; }
-    .map-center-label {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--g600);
-    }
-    .map-badge { position: absolute; top: 18px; right: 18px; }
+    #f1map { width: 100%; height: 100%; }
+    .map-badge { position: absolute; top: 18px; right: 18px; z-index: 1001; }
     .circuit-card {
       position: absolute;
       bottom: 20px; left: 20px;
@@ -353,9 +327,24 @@
       border: 1px solid var(--border-hi);
       border-left: 3px solid var(--red);
       padding: 16px 20px;
-      min-width: 210px;
+      min-width: 220px;
+      max-width: 280px;
       backdrop-filter: blur(4px);
+      z-index: 1001;
     }
+    /* Leaflet dark popup theme */
+    .leaflet-popup-content-wrapper {
+      background: rgba(10,10,10,0.96);
+      border: 1px solid var(--border-hi);
+      border-radius: 4px;
+      color: var(--white);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.7);
+    }
+    .leaflet-popup-tip { background: rgba(10,10,10,0.96); }
+    .leaflet-popup-content { margin: 12px 16px; }
+    .leaflet-popup-close-button { color: var(--g500) !important; }
+    .leaflet-container { font-family: 'Inter', sans-serif; background: #0A0A0A; }
+    .f1-marker { background: none !important; border: none !important; }
     .circuit-card-round {
       font-family: 'Barlow Condensed', sans-serif;
       font-size: 10px; font-weight: 600;
@@ -450,6 +439,27 @@
     .stbtn.active { background: var(--s3); color: var(--white); }
 
     .podium-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+    /* ── DRIVER / TEAM IMAGES ── */
+    .podium-photo {
+      width: 68px; height: 68px; border-radius: 50%;
+      object-fit: cover; object-position: top center;
+      display: block; margin: 0 auto 10px;
+      border: 2px solid var(--border-hi);
+      background: var(--s3);
+    }
+    .d-avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      object-fit: cover; object-position: top center;
+      border: 1.5px solid var(--border-hi);
+      flex-shrink: 0; background: var(--s3);
+    }
+    .team-logo-sm {
+      height: 18px; width: auto; max-width: 68px;
+      object-fit: contain; flex-shrink: 0;
+      filter: brightness(1.05);
+    }
+    .driver-cell { display: flex !important; align-items: center; gap: 10px; }
+
     .podium-card {
       background: var(--s1);
       border: 1px solid var(--border);
@@ -796,27 +806,16 @@
     </div>
     <hr class="divider">
     <div class="map-container">
-      <div class="map-grid"></div>
-      <div class="map-grid-major"></div>
-      <div class="map-center">
-        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
-          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-        </svg>
-        <div class="map-center-label">Interactive Circuit Map</div>
-        <div class="map-center-label" style="color:var(--g700);margin-top:4px;">OpenF1 Integration · Coming Soon</div>
-      </div>
+      <div id="f1map"></div>
       <div class="map-badge">
-        <div class="badge-live"><div class="live-dot"></div>Live data via OpenF1</div>
+        <div class="badge-live"><div class="live-dot"></div>Live · 2026 Calendar</div>
       </div>
-      <div class="circuit-card">
-        <div class="circuit-card-round">Circuit Tracker · Round 4</div>
-        <div class="circuit-card-name">Miami Int'l Autodrome</div>
-        <div class="circuit-card-info">May 8–10, 2026 &nbsp;·&nbsp; Miami, Florida 🇺🇸</div>
-        <div class="circuit-card-info" style="margin-top:6px;display:flex;gap:8px;">
-          <span class="badge-next">Next Race</span>
-          <span class="badge-sprint">Sprint Weekend</span>
-        </div>
+      <div class="circuit-card" id="circuitCard">
+        <div class="circuit-card-round" id="cardRound">2026 Season · 22 Rounds</div>
+        <div class="circuit-card-name" id="cardName">Click a pin</div>
+        <div class="circuit-card-info" id="cardInfo"></div>
+        <div class="circuit-card-info" id="cardBadges" style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;min-height:18px;"></div>
+        <div class="circuit-card-info" id="cardWinner" style="margin-top:4px;color:var(--g400);"></div>
       </div>
     </div>
     <div class="map-legend">
@@ -850,88 +849,92 @@
           <div class="race-name">Japan</div><div class="race-date">Mar 27–29</div>
           <div class="race-dot"></div>
         </div>
-        <div class="race-card upcoming" data-race="6">
-          <div class="race-flag">🇺🇸</div><div class="race-rnd">R06</div>
+        <div class="race-card upcoming" data-race="4">
+          <div class="race-flag">🇺🇸</div><div class="race-rnd">R04</div>
           <div class="race-name">Miami</div><div class="race-date">May 8–10</div>
-          <div class="race-badges"><span class="badge-next">Next</span><span class="badge-sprint">Sprint</span></div>
+          <div class="race-badges"><span class="badge-sprint">Sprint</span></div>
         </div>
-        <div class="race-card upcoming" data-race="7">
-          <div class="race-flag">🇨🇦</div><div class="race-rnd">R07</div>
+        <div class="race-card upcoming" data-race="5">
+          <div class="race-flag">🇨🇦</div><div class="race-rnd">R05</div>
           <div class="race-name">Canada</div><div class="race-date">May 22–24</div>
           <div class="race-badges"><span class="badge-sprint">Sprint</span></div>
         </div>
-        <div class="race-card upcoming" data-race="8">
-          <div class="race-flag">🇲🇨</div><div class="race-rnd">R08</div>
+        <div class="race-card upcoming" data-race="6">
+          <div class="race-flag">🇲🇨</div><div class="race-rnd">R06</div>
           <div class="race-name">Monaco</div><div class="race-date">Jun 5–7</div>
         </div>
-        <div class="race-card upcoming" data-race="9">
-          <div class="race-flag">🇧🇪</div><div class="race-rnd">R09</div>
+        <div class="race-card upcoming" data-race="7">
+          <div class="race-flag">🇧🇪</div><div class="race-rnd">R07</div>
           <div class="race-name">Belgium</div><div class="race-date">Jun 19–21</div>
         </div>
-        <div class="race-card upcoming" data-race="10">
-          <div class="race-flag">🇬🇧</div><div class="race-rnd">R10</div>
+        <div class="race-card upcoming" data-race="8">
+          <div class="race-flag">🇬🇧</div><div class="race-rnd">R08</div>
           <div class="race-name">Britain</div><div class="race-date">Jul 3–5</div>
           <div class="race-badges"><span class="badge-sprint">Sprint</span></div>
         </div>
-        <div class="race-card upcoming" data-race="11">
-          <div class="race-flag">🇦🇹</div><div class="race-rnd">R11</div>
+        <div class="race-card upcoming" data-race="9">
+          <div class="race-flag">🇦🇹</div><div class="race-rnd">R09</div>
           <div class="race-name">Austria</div><div class="race-date">Jul 17–19</div>
         </div>
-        <div class="race-card upcoming" data-race="12">
-          <div class="race-flag">🇭🇺</div><div class="race-rnd">R12</div>
+        <div class="race-card upcoming" data-race="10">
+          <div class="race-flag">🇭🇺</div><div class="race-rnd">R10</div>
           <div class="race-name">Hungary</div><div class="race-date">Jul 31–Aug 2</div>
         </div>
-        <div class="race-card upcoming" data-race="13">
-          <div class="race-flag">🇳🇱</div><div class="race-rnd">R13</div>
+        <div class="race-card upcoming" data-race="11">
+          <div class="race-flag">🇳🇱</div><div class="race-rnd">R11</div>
           <div class="race-name">Netherlands</div><div class="race-date">Aug 28–30</div>
           <div class="race-badges"><span class="badge-sprint">Sprint</span></div>
         </div>
-        <div class="race-card upcoming" data-race="14">
-          <div class="race-flag">🇮🇹</div><div class="race-rnd">R14</div>
+        <div class="race-card upcoming" data-race="12">
+          <div class="race-flag">🇮🇹</div><div class="race-rnd">R12</div>
           <div class="race-name">Italy</div><div class="race-date">Sep 4–6</div>
         </div>
-        <div class="race-card upcoming" data-race="15">
-          <div class="race-flag">🇪🇸</div><div class="race-rnd">R15</div>
+        <div class="race-card upcoming" data-race="13">
+          <div class="race-flag">🇪🇸</div><div class="race-rnd">R13</div>
           <div class="race-name">Madrid</div><div class="race-date">Sep 11–13</div>
           <div class="race-badges"><span class="badge-new">New</span></div>
         </div>
-        <div class="race-card upcoming" data-race="16">
-          <div class="race-flag">🇪🇸</div><div class="race-rnd">R16</div>
+        <div class="race-card upcoming" data-race="14">
+          <div class="race-flag">🇪🇸</div><div class="race-rnd">R14</div>
           <div class="race-name">Barcelona</div><div class="race-date">Sep 25–27</div>
         </div>
-        <div class="race-card upcoming" data-race="17">
-          <div class="race-flag">🇦🇿</div><div class="race-rnd">R17</div>
+        <div class="race-card upcoming" data-race="15">
+          <div class="race-flag">🇦🇿</div><div class="race-rnd">R15</div>
           <div class="race-name">Azerbaijan</div><div class="race-date">Oct 3</div>
         </div>
-        <div class="race-card upcoming" data-race="18">
-          <div class="race-flag">🇸🇬</div><div class="race-rnd">R18</div>
+        <div class="race-card upcoming" data-race="16">
+          <div class="race-flag">🇸🇬</div><div class="race-rnd">R16</div>
           <div class="race-name">Singapore</div><div class="race-date">Oct 16–18</div>
           <div class="race-badges"><span class="badge-sprint">Sprint</span></div>
         </div>
-        <div class="race-card upcoming" data-race="19">
-          <div class="race-flag">🇺🇸</div><div class="race-rnd">R19</div>
+        <div class="race-card upcoming" data-race="17">
+          <div class="race-flag">🇺🇸</div><div class="race-rnd">R17</div>
           <div class="race-name">Austin</div><div class="race-date">Oct 23–25</div>
         </div>
-        <div class="race-card upcoming" data-race="20">
-          <div class="race-flag">🇲🇽</div><div class="race-rnd">R20</div>
+        <div class="race-card upcoming" data-race="18">
+          <div class="race-flag">🇲🇽</div><div class="race-rnd">R18</div>
           <div class="race-name">Mexico</div><div class="race-date">Oct 30–Nov 1</div>
         </div>
-        <div class="race-card upcoming" data-race="21">
-          <div class="race-flag">🇧🇷</div><div class="race-rnd">R21</div>
+        <div class="race-card upcoming" data-race="19">
+          <div class="race-flag">🇧🇷</div><div class="race-rnd">R19</div>
           <div class="race-name">Brazil</div><div class="race-date">Nov 13–15</div>
         </div>
-        <div class="race-card upcoming" data-race="22">
-          <div class="race-flag">🇺🇸</div><div class="race-rnd">R22</div>
+        <div class="race-card upcoming" data-race="20">
+          <div class="race-flag">🇺🇸</div><div class="race-rnd">R20</div>
           <div class="race-name">Las Vegas</div><div class="race-date">Nov 19–21</div>
         </div>
-        <div class="race-card upcoming" data-race="23">
-          <div class="race-flag">🇶🇦</div><div class="race-rnd">R23</div>
+        <div class="race-card upcoming" data-race="21">
+          <div class="race-flag">🇶🇦</div><div class="race-rnd">R21</div>
           <div class="race-name">Qatar</div><div class="race-date">Nov 27–29</div>
         </div>
-        <div class="race-card upcoming" data-race="24">
-          <div class="race-flag">🇦🇪</div><div class="race-rnd">R24</div>
+        <div class="race-card upcoming" data-race="22">
+          <div class="race-flag">🇦🇪</div><div class="race-rnd">R22</div>
           <div class="race-name">Abu Dhabi</div><div class="race-date">Dec 4–6</div>
         </div>
+      </div>
+
+      <div id="fallbackBanner" style="display:none;margin-top:24px;padding:10px 16px;background:rgba(255,160,0,0.1);border:1px solid rgba(255,160,0,0.35);border-radius:8px;font-size:13px;color:#ffb300;">
+        ⚠ 2026 results not yet available — showing 2025 data
       </div>
 
       <div style="margin-top:36px;">
@@ -948,18 +951,21 @@
         <div class="podium-grid">
           <div class="podium-card p1">
             <div class="podium-num">P1</div>
+            <img id="p1photo" class="podium-photo" alt="" onerror="this.style.display='none'" style="display:none;">
             <div class="podium-driver" id="p1driver">—</div>
             <div class="podium-team"><div class="team-dot" id="p1dot"></div><span id="p1team">—</span></div>
             <div class="podium-gap" id="p1time">—</div>
           </div>
           <div class="podium-card p2">
             <div class="podium-num">P2</div>
+            <img id="p2photo" class="podium-photo" alt="" onerror="this.style.display='none'" style="display:none;">
             <div class="podium-driver" id="p2driver">—</div>
             <div class="podium-team"><div class="team-dot" id="p2dot"></div><span id="p2team">—</span></div>
             <div class="podium-gap" id="p2time">—</div>
           </div>
           <div class="podium-card p3">
             <div class="podium-num">P3</div>
+            <img id="p3photo" class="podium-photo" alt="" onerror="this.style.display='none'" style="display:none;">
             <div class="podium-driver" id="p3driver">—</div>
             <div class="podium-team"><div class="team-dot" id="p3dot"></div><span id="p3team">—</span></div>
             <div class="podium-gap" id="p3time">—</div>
@@ -1118,6 +1124,11 @@
 
 </main>
 
+<footer style="background:var(--s1);border-top:1px solid var(--border);padding:16px 28px;text-align:center;font-size:11px;color:var(--g600);line-height:1.7;">
+  All team logos, driver images and trademarks are property of their respective owners.
+  This is a non-commercial personal project. Image sources: Wikimedia Commons (CC / public domain).
+</footer>
+
 <script>
 console.log('F1 2026 Analytics — built by Harshith');
 
@@ -1135,7 +1146,71 @@ const teamColors = {
   cadillac:      '#B400FF'
 };
 
-const SPRINT_ROUNDS = [2, 6, 7, 10, 13, 18];
+const TEAM_LOGOS = {
+  ferrari:      'https://upload.wikimedia.org/wikipedia/en/thumb/d/df/Scuderia_Ferrari_HP_logo_24.svg/200px-Scuderia_Ferrari_HP_logo_24.svg.png',
+  mclaren:      'https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/McLaren_Racing_logo.png/200px-McLaren_Racing_logo.png',
+  mercedes:     'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Mercedes-AMG_Petronas_F1_Team_logo_%282026%29.svg/200px-Mercedes-AMG_Petronas_F1_Team_logo_%282026%29.svg.png',
+  red_bull:     'https://upload.wikimedia.org/wikipedia/en/thumb/f/fa/Red_Bull_Racing_Logo_2026.svg/200px-Red_Bull_Racing_Logo_2026.svg.png',
+  williams:     'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Atlassian_Williams_F1_Team_logo.svg/200px-Atlassian_Williams_F1_Team_logo.svg.png',
+  aston_martin: 'https://upload.wikimedia.org/wikipedia/commons/0/03/Aston_Martin_F1_Team_logo_2024.jpg',
+  alpine:       'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Alpine_F1_Team_Logo.svg/200px-Alpine_F1_Team_Logo.svg.png',
+  haas:         'https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/TGR_Haas_F1_Team_Logo_%282026%29.svg/200px-TGR_Haas_F1_Team_Logo_%282026%29.svg.png',
+  rb:           'https://upload.wikimedia.org/wikipedia/en/thumb/2/2b/VCARB_F1_logo.svg/200px-VCARB_F1_logo.svg.png',
+  audi:         'https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Audif1.com_logo17.svg/200px-Audif1.com_logo17.svg.png',
+  cadillac:     'https://upload.wikimedia.org/wikipedia/commons/d/d8/Cadillac_Formula_1_Team_logo.png',
+};
+
+const DRIVER_PHOTOS = {
+  VER: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/2024-08-25_Motorsport%2C_Formel_1%2C_Gro%C3%9Fer_Preis_der_Niederlande_2024_STP_3973_by_Stepro_%28medium_crop%29.jpg/250px-2024-08-25_Motorsport%2C_Formel_1%2C_Gro%C3%9Fer_Preis_der_Niederlande_2024_STP_3973_by_Stepro_%28medium_crop%29.jpg',
+  HAD: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Isack_Hadjar_at_the_Melbourne_Walk_during_the_2026_Australian_Grand_Prix_%28028A8753%29_%28cropped%29.jpg/250px-Isack_Hadjar_at_the_Melbourne_Walk_during_the_2026_Australian_Grand_Prix_%28028A8753%29_%28cropped%29.jpg',
+  LEC: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/2024-08-25_Motorsport%2C_Formel_1%2C_Gro%C3%9Fer_Preis_der_Niederlande_2024_STP_3978_by_Stepro_%28cropped2%29.jpg/250px-2024-08-25_Motorsport%2C_Formel_1%2C_Gro%C3%9Fer_Preis_der_Niederlande_2024_STP_3978_by_Stepro_%28cropped2%29.jpg',
+  HAM: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Prime_Minister_Keir_Starmer_meets_Sir_Lewis_Hamilton_%2854566928382%29_%28cropped%29.jpg/250px-Prime_Minister_Keir_Starmer_meets_Sir_Lewis_Hamilton_%2854566928382%29_%28cropped%29.jpg',
+  NOR: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/2024-08-25_Motorsport%2C_Formel_1%2C_Gro%C3%9Fer_Preis_der_Niederlande_2024_STP_3968_by_Stepro_%28cropped2%29.jpg/250px-2024-08-25_Motorsport%2C_Formel_1%2C_Gro%C3%9Fer_Preis_der_Niederlande_2024_STP_3968_by_Stepro_%28cropped2%29.jpg',
+  PIA: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/2026_Chinese_GP_-_Oscar_Piastri_%28cropped%29_%28cropped%29.jpg/250px-2026_Chinese_GP_-_Oscar_Piastri_%28cropped%29_%28cropped%29.jpg',
+  RUS: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/KingsLeonSilverstne040724_%2828_of_112%29_%2853838006028%29_%28cropped%29.jpg/250px-KingsLeonSilverstne040724_%2828_of_112%29_%2853838006028%29_%28cropped%29.jpg',
+  ANT: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Kimi_Antonelli_at_the_2025_US_Grand_Prix_in_Austin%2C_TX_%28cropped%29.jpg/250px-Kimi_Antonelli_at_the_2025_US_Grand_Prix_in_Austin%2C_TX_%28cropped%29.jpg',
+  SAI: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Formula1Gabelhofen2022_%2804%29_%28cropped2%29.jpg/250px-Formula1Gabelhofen2022_%2804%29_%28cropped2%29.jpg',
+  ALB: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Alex_Albon_%28cropped%29.jpg/250px-Alex_Albon_%28cropped%29.jpg',
+  ALO: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Alonso-68_%2824710447098%29.jpg/250px-Alonso-68_%2824710447098%29.jpg',
+  STR: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/2025_Japan_GP_-_Aston_Martin_-_Lance_Stroll_-_Fanzone_Stage_%28cropped%29.jpg/250px-2025_Japan_GP_-_Aston_Martin_-_Lance_Stroll_-_Fanzone_Stage_%28cropped%29.jpg',
+  OCO: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Esteban_Ocon_2024_Suzuka_%28cropped%29.jpg/250px-Esteban_Ocon_2024_Suzuka_%28cropped%29.jpg',
+  BEA: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/2025_Japan_GP_-_Haas_-_Oliver_Bearman_-_Thursday_%28cropped%29.jpg/250px-2025_Japan_GP_-_Haas_-_Oliver_Bearman_-_Thursday_%28cropped%29.jpg',
+  GAS: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/2022_French_Grand_Prix_%2852279065728%29_%28midcrop%29.png/250px-2022_French_Grand_Prix_%2852279065728%29_%28midcrop%29.png',
+  COL: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Franco_Colapinto_at_the_Melbourne_Walk_during_the_2026_Australian_Grand_Prix_%28028A8704%29_%28cropped%29.jpg/250px-Franco_Colapinto_at_the_Melbourne_Walk_during_the_2026_Australian_Grand_Prix_%28028A8704%29_%28cropped%29.jpg',
+  HUL: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/2019_Formula_One_tests_Barcelona%2C_Hulkenberg_%2840287128313%29.jpg/250px-2019_Formula_One_tests_Barcelona%2C_Hulkenberg_%2840287128313%29.jpg',
+  BOR: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Gabriel_Bortoleto_%28cropped%29.jpg/250px-Gabriel_Bortoleto_%28cropped%29.jpg',
+  LAW: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Liam_Lawson_at_the_Red_Bull_Fan_Zone_%E2%80%93_Crown_Riverwalk%2C_Melbourne_%28028A7793%29.jpg/250px-Liam_Lawson_at_the_Red_Bull_Fan_Zone_%E2%80%93_Crown_Riverwalk%2C_Melbourne_%28028A7793%29.jpg',
+  LIN: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Arvid_Lindblad_at_the_Red_Bull_Fan_Zone_%E2%80%93_Crown_Riverwalk%2C_Melbourne_%28028A7869%29_%28cropped%29.jpg/250px-Arvid_Lindblad_at_the_Red_Bull_Fan_Zone_%E2%80%93_Crown_Riverwalk%2C_Melbourne_%28028A7869%29_%28cropped%29.jpg',
+  PER: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/2021_US_GP_driver_parade_%28cropped2%29.jpg/250px-2021_US_GP_driver_parade_%28cropped2%29.jpg',
+  BOT: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Valtteri_Bottas_at_the_2026_Adelaide_Motorsport_Festival_%28028A7556%29.jpg/250px-Valtteri_Bottas_at_the_2026_Adelaide_Motorsport_Festival_%28028A7556%29.jpg',
+};
+
+const SPRINT_ROUNDS = [2, 4, 5, 8, 11, 16];
+
+const RACE_END_DATES = {
+  1:  '2026-03-08',
+  2:  '2026-03-15',
+  3:  '2026-03-29',
+  4:  '2026-05-10',
+  5:  '2026-05-24',
+  6:  '2026-06-07',
+  7:  '2026-06-21',
+  8:  '2026-07-05',
+  9:  '2026-07-19',
+  10: '2026-08-02',
+  11: '2026-08-30',
+  12: '2026-09-06',
+  13: '2026-09-13',
+  14: '2026-09-27',
+  15: '2026-10-03',
+  16: '2026-10-18',
+  17: '2026-10-25',
+  18: '2026-11-01',
+  19: '2026-11-15',
+  20: '2026-11-21',
+  21: '2026-11-29',
+  22: '2026-12-06',
+};
 
 let currentRace = 1;
 let sprintMode  = 'race';
@@ -1147,8 +1222,9 @@ function switchTab(name) {
     a.classList.toggle('active', a.dataset.tab === name);
   });
   document.getElementById('tab-' + name).classList.add('active');
-  if (name === 'standings') setTimeout(animateRows, 60);
+  if (name === 'standings')   setTimeout(animateRows, 60);
   if (name === 'predictions') setTimeout(animatePredBars, 120);
+  if (name === 'map' && f1Map) setTimeout(() => f1Map.invalidateSize(), 60);
 }
 
 /* ── MOBILE MENU ── */
@@ -1175,6 +1251,43 @@ function selectRace(el, num) {
   updateSprintToggle();
 }
 
+function autoSelectRace() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  let lastCard = null;
+  let lastNum  = null;
+
+  document.querySelectorAll('.race-card').forEach(card => {
+    const num    = parseInt(card.dataset.race, 10);
+    const endStr = RACE_END_DATES[num];
+    if (!endStr) return;
+
+    const [y, m, d] = endStr.split('-').map(Number);
+    const endDate   = new Date(y, m - 1, d);
+
+    if (endDate < today) {
+      card.classList.remove('upcoming');
+      card.setAttribute('onclick', `selectRace(this,${num})`);
+      card.setAttribute('tabindex', '0');
+      const nextBadge = card.querySelector('.badge-next');
+      if (nextBadge) nextBadge.remove();
+      lastCard = card;
+      lastNum  = num;
+    } else {
+      card.classList.add('upcoming');
+      card.removeAttribute('onclick');
+    }
+  });
+
+  if (lastCard) {
+    document.querySelectorAll('.race-card').forEach(c => c.classList.remove('selected'));
+    lastCard.classList.add('selected');
+    currentRace = lastNum;
+    setTimeout(() => lastCard.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }), 100);
+  }
+}
+
 function updateSprintToggle() {
   const isSprint = SPRINT_ROUNDS.includes(currentRace);
   document.getElementById('sprintToggle').style.display = isSprint ? 'flex' : 'none';
@@ -1189,63 +1302,97 @@ function setSprintMode(mode) {
 }
 
 /* ── PODIUM + FULL RESULTS ── */
-function updatePodium() {
-  const endpoint = sprintMode === 'sprint'
-    ? `https://api.jolpi.ca/ergast/f1/2026/${currentRace}/sprint/`
-    : `https://api.jolpi.ca/ergast/f1/2026/${currentRace}/results/`;
+function renderResults(race, results, usingFallback) {
+  document.getElementById('fallbackBanner').style.display = usingFallback ? 'block' : 'none';
 
-  fetch(endpoint)
+  document.getElementById('podiumEyebrow').textContent =
+    race.raceName + ' · R' + String(currentRace).padStart(2, '0');
+
+  [0, 1, 2].forEach(i => {
+    const r = results[i];
+    if (!r) return;
+    const p     = ['p1','p2','p3'][i];
+    const color = teamColors[r.Constructor.constructorId] || '#fff';
+    document.getElementById(p+'driver').textContent =
+      r.Driver.givenName[0] + '. ' + r.Driver.familyName;
+    document.getElementById(p+'team').textContent = r.Constructor.name;
+    document.getElementById(p+'dot').style.background = color;
+    document.getElementById(p+'time').textContent = r.Time ? r.Time.time : r.status;
+    const photoEl = document.getElementById(p+'photo');
+    if (photoEl) {
+      const url = DRIVER_PHOTOS[r.Driver.code];
+      if (url) {
+        photoEl.src         = url;
+        photoEl.alt         = r.Driver.familyName;
+        photoEl.style.borderColor = color;
+        photoEl.style.display     = 'block';
+      } else {
+        photoEl.style.display = 'none';
+      }
+    }
+  });
+
+  const tb = document.getElementById('resultsBody');
+  tb.innerHTML = '';
+  results.forEach(r => {
+    const color = teamColors[r.Constructor.constructorId] || '#fff';
+    const logo  = TEAM_LOGOS[r.Constructor.constructorId] || '';
+    const time  = r.Time ? r.Time.time : r.status;
+    const tr    = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="color:var(--g400);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;">${r.position}</td>
+      <td>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;">
+          ${r.Driver.givenName[0]}. ${r.Driver.familyName}
+          <span style="font-size:11px;color:var(--g600);margin-left:6px;">${r.Driver.code}</span>
+        </div>
+      </td>
+      <td>
+        <div style="display:flex;align-items:center;gap:7px;">
+          <div style="width:3px;height:16px;border-radius:2px;background:${color};flex-shrink:0;"></div>
+          ${logo ? `<img src="${logo}" alt="${r.Constructor.name}" onerror="this.style.display='none'" style="height:16px;width:auto;max-width:60px;object-fit:contain;flex-shrink:0;">` : ''}
+          <span style="color:var(--g400);font-size:12px;">${r.Constructor.name}</span>
+        </div>
+      </td>
+      <td style="color:var(--g500);">${r.laps}</td>
+      <td style="font-variant-numeric:tabular-nums;color:var(--g300);">${time}</td>
+      <td style="font-family:'Barlow Condensed',sans-serif;font-weight:700;">${r.points}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+function updatePodium() {
+  const type = sprintMode === 'sprint' ? 'sprint' : 'results';
+  const url2026 = `https://api.jolpi.ca/ergast/f1/2026/${currentRace}/${type}.json`;
+  const url2025 = `https://api.jolpi.ca/ergast/f1/2025/${currentRace}/${type}.json`;
+
+  console.log('[F1] Fetching:', url2026);
+
+  fetch(url2026)
     .then(res => res.json())
     .then(data => {
-      const races = data.MRData.RaceTable.Races;
-      if (!races || races.length === 0) return;
-      const race    = races[0];
-      const results = sprintMode === 'sprint' ? race.SprintResults : race.Results;
-      if (!results || results.length === 0) return;
+      const races   = data.MRData.RaceTable.Races;
+      const results = races?.[0]?.[sprintMode === 'sprint' ? 'SprintResults' : 'Results'];
 
-      document.getElementById('podiumEyebrow').textContent =
-        race.raceName + ' · R' + String(currentRace).padStart(2, '0');
+      if (results && results.length > 0) {
+        renderResults(races[0], results, false);
+        return;
+      }
 
-      [0, 1, 2].forEach(i => {
-        const r = results[i];
-        if (!r) return;
-        const p = ['p1','p2','p3'][i];
-        document.getElementById(p+'driver').textContent =
-          r.Driver.givenName[0] + '. ' + r.Driver.familyName;
-        document.getElementById(p+'team').textContent = r.Constructor.name;
-        document.getElementById(p+'dot').style.background =
-          teamColors[r.Constructor.constructorId] || '#fff';
-        document.getElementById(p+'time').textContent =
-          r.Time ? r.Time.time : r.status;
-      });
-
-      const tb = document.getElementById('resultsBody');
-      tb.innerHTML = '';
-      results.forEach(r => {
-        const color = teamColors[r.Constructor.constructorId] || '#fff';
-        const time  = r.Time ? r.Time.time : r.status;
-        const tr    = document.createElement('tr');
-        tr.innerHTML = `
-          <td style="color:var(--g400);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;">${r.position}</td>
-          <td>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;">
-              ${r.Driver.givenName[0]}. ${r.Driver.familyName}
-              <span style="font-size:11px;color:var(--g600);margin-left:6px;">${r.Driver.code}</span>
-            </div>
-          </td>
-          <td>
-            <div style="display:flex;align-items:center;gap:7px;">
-              <div style="width:3px;height:16px;border-radius:2px;background:${color};flex-shrink:0;"></div>
-              ${r.Constructor.name}
-            </div>
-          </td>
-          <td style="color:var(--g500);">${r.laps}</td>
-          <td style="font-variant-numeric:tabular-nums;color:var(--g300);">${time}</td>
-          <td style="font-family:'Barlow Condensed',sans-serif;font-weight:700;">${r.points}</td>`;
-        tb.appendChild(tr);
-      });
+      console.log('[F1] 2026 round', currentRace, 'empty — falling back to 2025:', url2025);
+      return fetch(url2025)
+        .then(res => res.json())
+        .then(fb => {
+          const fbRaces   = fb.MRData.RaceTable.Races;
+          const fbResults = fbRaces?.[0]?.[sprintMode === 'sprint' ? 'SprintResults' : 'Results'];
+          if (fbResults && fbResults.length > 0) {
+            renderResults(fbRaces[0], fbResults, true);
+          } else {
+            console.warn('[F1] No results found in 2025 either for round', currentRace);
+          }
+        });
     })
-    .catch(err => console.error('Results fetch error:', err));
+    .catch(err => console.error('[F1] Results fetch error:', err));
 }
 
 /* ── STANDINGS ── */
@@ -1260,15 +1407,19 @@ function buildDrivers() {
         const tr = document.createElement('tr');
         tr.className = 'srow';
         tr.style.animationDelay = i * 38 + 'ms';
-        const color = teamColors[d.Constructors[0].constructorId] || '#fff';
+        const color  = teamColors[d.Constructors[0].constructorId] || '#fff';
+        const dPhoto = DRIVER_PHOTOS[d.Driver.code] || '';
         tr.innerHTML = `
           <td class="pos-cell ${i < 3 ? 'hi' : ''}">${String(i+1).padStart(2,'0')}</td>
           <td class="bar-cell"><div class="team-bar" style="background:${color}"></div></td>
           <td class="driver-cell">
-            <div class="d-name">${d.Driver.givenName} ${d.Driver.familyName}
-              <span class="d-abbr">${d.Driver.code}</span>
+            ${dPhoto ? `<img class="d-avatar" src="${dPhoto}" alt="${d.Driver.familyName}" onerror="this.style.display='none'">` : ''}
+            <div>
+              <div class="d-name">${d.Driver.givenName} ${d.Driver.familyName}
+                <span class="d-abbr">${d.Driver.code}</span>
+              </div>
+              <div class="d-team">${d.Constructors[0].name}</div>
             </div>
-            <div class="d-team">${d.Constructors[0].name}</div>
           </td>
           <td class="nat-cell"></td>
           <td class="pts-cell">${d.points}</td>`;
@@ -1289,13 +1440,16 @@ function buildConstructors() {
         const tr = document.createElement('tr');
         tr.className = 'srow';
         tr.style.animationDelay = i * 38 + 'ms';
-        const color = teamColors[c.Constructor.constructorId] || '#fff';
+        const color  = teamColors[c.Constructor.constructorId] || '#fff';
+        const tLogo  = TEAM_LOGOS[c.Constructor.constructorId] || '';
         tr.innerHTML = `
           <td class="pos-cell ${i < 3 ? 'hi' : ''}">${String(i+1).padStart(2,'0')}</td>
           <td class="bar-cell"><div class="team-bar" style="background:${color}"></div></td>
           <td class="team-cell">
-            <div class="t-name">${c.Constructor.name}</div>
-            <div class="t-drivers">${c.points} pts</div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              ${tLogo ? `<img class="team-logo-sm" src="${tLogo}" alt="${c.Constructor.name}" onerror="this.style.display='none'">` : ''}
+              <div class="t-name">${c.Constructor.name}</div>
+            </div>
           </td>
           <td class="pts-cell">${c.points}</td>`;
         tb.appendChild(tr);
@@ -1367,11 +1521,176 @@ function animatePredBars() {
   });
 }
 
+/* ── CIRCUIT MAP ── */
+const CIRCUITS = [
+  { round:  1, name: 'Australian Grand Prix',   circuit: 'Albert Park Circuit',             city: 'Melbourne',      country: 'Australia',      flag: '🇦🇺', date: 'Mar 6–8',      end: '2026-03-08', lat: -37.8497, lng:  144.9680 },
+  { round:  2, name: 'Chinese Grand Prix',       circuit: 'Shanghai International Circuit',  city: 'Shanghai',       country: 'China',          flag: '🇨🇳', date: 'Mar 13–15',    end: '2026-03-15', lat:  31.3389, lng:  121.2198, sprint: true },
+  { round:  3, name: 'Japanese Grand Prix',      circuit: 'Suzuka Circuit',                  city: 'Suzuka',         country: 'Japan',          flag: '🇯🇵', date: 'Mar 27–29',    end: '2026-03-29', lat:  34.8431, lng:  136.5407 },
+  { round:  4, name: 'Miami Grand Prix',         circuit: 'Miami International Autodrome',   city: 'Miami, Florida', country: 'United States',  flag: '🇺🇸', date: 'May 8–10',     end: '2026-05-10', lat:  25.9581, lng:  -80.2389, sprint: true },
+  { round:  5, name: 'Canadian Grand Prix',      circuit: 'Circuit Gilles Villeneuve',       city: 'Montreal',       country: 'Canada',         flag: '🇨🇦', date: 'May 22–24',    end: '2026-05-24', lat:  45.5017, lng:  -73.5224, sprint: true },
+  { round:  6, name: 'Monaco Grand Prix',        circuit: 'Circuit de Monaco',               city: 'Monaco',         country: 'Monaco',         flag: '🇲🇨', date: 'Jun 5–7',      end: '2026-06-07', lat:  43.7347, lng:    7.4205 },
+  { round:  7, name: 'Belgian Grand Prix',       circuit: 'Circuit de Spa-Francorchamps',    city: 'Spa',            country: 'Belgium',        flag: '🇧🇪', date: 'Jun 19–21',    end: '2026-06-21', lat:  50.4372, lng:    5.9714 },
+  { round:  8, name: 'British Grand Prix',       circuit: 'Silverstone Circuit',             city: 'Silverstone',    country: 'Great Britain',  flag: '🇬🇧', date: 'Jul 3–5',      end: '2026-07-05', lat:  52.0786, lng:   -1.0169, sprint: true },
+  { round:  9, name: 'Austrian Grand Prix',      circuit: 'Red Bull Ring',                   city: 'Spielberg',      country: 'Austria',        flag: '🇦🇹', date: 'Jul 17–19',    end: '2026-07-19', lat:  47.2197, lng:   14.7647 },
+  { round: 10, name: 'Hungarian Grand Prix',     circuit: 'Hungaroring',                     city: 'Budapest',       country: 'Hungary',        flag: '🇭🇺', date: 'Jul 31–Aug 2', end: '2026-08-02', lat:  47.5789, lng:   19.2486 },
+  { round: 11, name: 'Dutch Grand Prix',         circuit: 'Circuit Zandvoort',               city: 'Zandvoort',      country: 'Netherlands',    flag: '🇳🇱', date: 'Aug 28–30',    end: '2026-08-30', lat:  52.3888, lng:    4.5409, sprint: true },
+  { round: 12, name: 'Italian Grand Prix',       circuit: 'Autodromo Nazionale Monza',       city: 'Monza',          country: 'Italy',          flag: '🇮🇹', date: 'Sep 4–6',      end: '2026-09-06', lat:  45.6156, lng:    9.2811 },
+  { round: 13, name: 'Madrid Grand Prix',        circuit: 'IFEMA Madrid Circuit',            city: 'Madrid',         country: 'Spain',          flag: '🇪🇸', date: 'Sep 11–13',    end: '2026-09-13', lat:  40.4964, lng:   -3.6022, isNew: true },
+  { round: 14, name: 'Spanish Grand Prix',       circuit: 'Circuit de Barcelona-Catalunya',  city: 'Barcelona',      country: 'Spain',          flag: '🇪🇸', date: 'Sep 25–27',    end: '2026-09-27', lat:  41.5700, lng:    2.2611 },
+  { round: 15, name: 'Azerbaijan Grand Prix',    circuit: 'Baku City Circuit',               city: 'Baku',           country: 'Azerbaijan',     flag: '🇦🇿', date: 'Oct 3',        end: '2026-10-03', lat:  40.3725, lng:   49.8533 },
+  { round: 16, name: 'Singapore Grand Prix',     circuit: 'Marina Bay Street Circuit',       city: 'Singapore',      country: 'Singapore',      flag: '🇸🇬', date: 'Oct 16–18',    end: '2026-10-18', lat:   1.2914, lng:  103.8639, sprint: true },
+  { round: 17, name: 'United States Grand Prix', circuit: 'Circuit of the Americas',         city: 'Austin, Texas',  country: 'United States',  flag: '🇺🇸', date: 'Oct 23–25',    end: '2026-10-25', lat:  30.1328, lng:  -97.6411 },
+  { round: 18, name: 'Mexico City Grand Prix',   circuit: 'Autodromo Hermanos Rodriguez',    city: 'Mexico City',    country: 'Mexico',         flag: '🇲🇽', date: 'Oct 30–Nov 1', end: '2026-11-01', lat:  19.4042, lng:  -99.0907 },
+  { round: 19, name: 'Sao Paulo Grand Prix',     circuit: 'Autodromo Jose Carlos Pace',      city: 'Sao Paulo',      country: 'Brazil',         flag: '🇧🇷', date: 'Nov 13–15',    end: '2026-11-15', lat: -23.7036, lng:  -46.6997 },
+  { round: 20, name: 'Las Vegas Grand Prix',     circuit: 'Las Vegas Strip Circuit',         city: 'Las Vegas',      country: 'United States',  flag: '🇺🇸', date: 'Nov 19–21',    end: '2026-11-21', lat:  36.1147, lng: -115.1728 },
+  { round: 21, name: 'Qatar Grand Prix',         circuit: 'Lusail International Circuit',    city: 'Lusail',         country: 'Qatar',          flag: '🇶🇦', date: 'Nov 27–29',    end: '2026-11-29', lat:  25.4900, lng:   51.4542 },
+  { round: 22, name: 'Abu Dhabi Grand Prix',     circuit: 'Yas Marina Circuit',              city: 'Abu Dhabi',      country: 'UAE',            flag: '🇦🇪', date: 'Dec 4–6',      end: '2026-12-06', lat:  24.4672, lng:   54.6031 },
+];
+
+let f1Map = null;
+const winnerCache = {};
+
+function circuitEndDate(c) {
+  const [y, m, d] = c.end.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function getMapToday() {
+  const t = new Date(); t.setHours(0, 0, 0, 0); return t;
+}
+
+function fetchWinnerAndUpdate(round, popupEl, cardEl) {
+  if (winnerCache[round] !== undefined) {
+    const txt = winnerCache[round] ? '🏆 Winner: ' + winnerCache[round] : '';
+    if (popupEl) popupEl.textContent = txt;
+    if (cardEl)  cardEl.textContent  = txt;
+    return;
+  }
+  fetch('https://api.jolpi.ca/ergast/f1/2026/' + round + '/results.json')
+    .then(r => r.json())
+    .then(data => {
+      const races = data.MRData?.RaceTable?.Races;
+      const w = races?.[0]?.Results?.[0];
+      winnerCache[round] = w ? (w.Driver.givenName[0] + '. ' + w.Driver.familyName) : null;
+      const txt = winnerCache[round] ? '🏆 Winner: ' + winnerCache[round] : '';
+      if (popupEl) popupEl.textContent = txt;
+      if (cardEl)  cardEl.textContent  = txt;
+    })
+    .catch(() => { winnerCache[round] = null; });
+}
+
+function updateCircuitCard(c, status, isNext) {
+  document.getElementById('cardRound').textContent =
+    'Round ' + String(c.round).padStart(2, '0') + ' · ' + c.country + ' ' + c.flag;
+  document.getElementById('cardName').textContent  = c.circuit;
+  document.getElementById('cardInfo').textContent  = c.date + ', 2026  ·  ' + c.city;
+
+  const badges = document.getElementById('cardBadges');
+  badges.innerHTML = '';
+  if (status === 'completed') badges.innerHTML +=
+    '<span style="font-size:10px;font-family:\'Barlow Condensed\',sans-serif;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;border:1px solid rgba(74,222,128,.35);color:#4ade80;border-radius:3px;">Completed</span>';
+  if (isNext) badges.innerHTML +=
+    '<span class="badge-next">Next Race</span>';
+  if (c.sprint) badges.innerHTML +=
+    '<span class="badge-sprint">Sprint</span>';
+  if (c.isNew) badges.innerHTML +=
+    '<span class="badge-new">New</span>';
+
+  const cardWinner = document.getElementById('cardWinner');
+  cardWinner.textContent = '';
+  if (status === 'completed') fetchWinnerAndUpdate(c.round, null, cardWinner);
+}
+
+function initMap() {
+  if (f1Map) return;
+
+  const today     = getMapToday();
+  const completed = CIRCUITS.filter(c => circuitEndDate(c) < today);
+  const upcoming  = CIRCUITS.filter(c => circuitEndDate(c) >= today);
+  const latest    = completed[completed.length - 1] || null;
+  const next      = upcoming[0] || null;
+
+  f1Map = L.map('f1map', { zoomControl: true, scrollWheelZoom: true });
+  f1Map.setView([25, 15], 2);
+
+  L.tileLayer(
+    'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 19,
+      detectRetina: true,
+    }
+  ).addTo(f1Map);
+
+  // Red dashed route connecting all circuits in round order
+  L.polyline(CIRCUITS.map(c => [c.lat, c.lng]), {
+    color: '#E8002D',
+    weight: 1.5,
+    opacity: 0.55,
+    dashArray: '6 9',
+  }).addTo(f1Map);
+
+  CIRCUITS.forEach(c => {
+    const isCompleted = completed.some(x => x.round === c.round);
+    const isLatest    = latest && c.round === latest.round;
+    const isNext      = next   && c.round === next.round;
+
+    const emoji = isLatest ? '🏎️'
+                : isCompleted ? '🏆'
+                : isNext ? '📍'
+                : '🏁';
+    const size  = (isLatest || isNext) ? 28 : 22;
+
+    const icon = L.divIcon({
+      html: '<div style="font-size:' + size + 'px;line-height:1;text-align:center;filter:drop-shadow(0 2px 6px rgba(0,0,0,.9));">' + emoji + '</div>',
+      className: 'f1-marker',
+      iconSize:   [size, size],
+      iconAnchor: [size / 2, size / 2],
+      popupAnchor: [0, -size / 2 - 6],
+    });
+
+    const rndLabel  = 'R' + String(c.round).padStart(2, '0') + ' · ' + c.date;
+    const statusBit = isLatest    ? '<span style="color:#FF8000;">&#127950;&#65039; Most Recent</span>'
+                    : isCompleted ? '<span style="color:#4ade80;">✓ Completed</span>'
+                    : isNext      ? '<span style="color:#F59E0B;">&#128205; Next Race</span>'
+                    : '';
+    const sprintBit = c.sprint ? ' &nbsp;<span style="color:#818CF8;">◈ Sprint</span>' : '';
+
+    const popupHtml =
+      '<div>' +
+        '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:10px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:#E8002D;margin-bottom:4px;">' + rndLabel + '</div>' +
+        '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:17px;font-weight:700;text-transform:uppercase;color:#fff;margin-bottom:2px;">' + c.name.replace(' Grand Prix', '').replace('Sao Paulo', 'São Paulo') + '</div>' +
+        '<div style="font-size:11px;color:#6B7280;margin-bottom:5px;">' + c.circuit + '</div>' +
+        (statusBit || sprintBit ? '<div style="font-size:11px;margin-bottom:4px;">' + (statusBit || '') + sprintBit + '</div>' : '') +
+        (isCompleted ? '<div id="popupW' + c.round + '" style="font-size:12px;color:#D1D5DB;min-height:16px;"></div>' : '') +
+      '</div>';
+
+    const marker = L.marker([c.lat, c.lng], { icon }).addTo(f1Map);
+    marker.bindPopup(popupHtml, { maxWidth: 260 });
+
+    marker.on('click', () => {
+      const status = isCompleted ? 'completed' : 'upcoming';
+      updateCircuitCard(c, status, isNext);
+      if (isCompleted) {
+        setTimeout(() => {
+          fetchWinnerAndUpdate(c.round, document.getElementById('popupW' + c.round), document.getElementById('cardWinner'));
+        }, 60);
+      }
+    });
+  });
+
+  // Default card: most recently completed race
+  if (latest) updateCircuitCard(latest, 'completed', false);
+}
+
 /* ── INIT ── */
 buildDrivers();
 buildConstructors();
+autoSelectRace();
 updateSprintToggle();
 updatePodium();
+initMap();
 </script>
 </body>
 </html>
