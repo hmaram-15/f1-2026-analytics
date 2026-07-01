@@ -1163,11 +1163,54 @@
         <div class="pred-card">
           <div class="pred-card-num">Model 01</div>
           <div class="pred-card-title">Tire Degradation Model</div>
-          <div class="pred-card-status">Status: Building · Week 7 of Training</div>
-          <div class="pred-track"><div class="pred-fill" style="width:0%" data-target="22"></div></div>
-          <div class="pred-footer">
-            <span class="pred-pct">22% Complete</span>
-            <button class="notify-btn" data-tip="Coming soon">Notify Me</button>
+          <div class="pred-card-status">Status: Live · Polynomial Regression · 8 Races Trained</div>
+
+          <div style="display:flex;flex-direction:column;gap:10px;margin:18px 0 14px;">
+            <div>
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--g600);margin-bottom:4px;">Race</div>
+              <select id="tire-race"
+                style="width:100%;background:var(--s2);border:1px solid var(--border);border-radius:2px;padding:8px 10px;font-family:'Barlow Condensed',sans-serif;font-size:14px;color:var(--white);outline:none;cursor:pointer;"
+                onfocus="this.style.borderColor='var(--red)'" onblur="this.style.borderColor='var(--border)'">
+                <option value="">Loading races...</option>
+              </select>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <div>
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--g600);margin-bottom:4px;">Compound</div>
+                <select id="tire-compound"
+                  style="width:100%;background:var(--s2);border:1px solid var(--border);border-radius:2px;padding:8px 10px;font-family:'Barlow Condensed',sans-serif;font-size:14px;color:var(--white);outline:none;cursor:pointer;"
+                  onfocus="this.style.borderColor='var(--red)'" onblur="this.style.borderColor='var(--border)'">
+                  <option value="SOFT">Soft</option>
+                  <option value="MEDIUM">Medium</option>
+                  <option value="HARD">Hard</option>
+                  <option value="INTERMEDIATE">Intermediate</option>
+                  <option value="WET">Wet</option>
+                </select>
+              </div>
+              <div>
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--g600);margin-bottom:4px;">Tyre Life (laps)</div>
+                <input id="tire-life" type="number" placeholder="e.g. 15" min="1" max="40"
+                  style="width:100%;background:var(--s2);border:1px solid var(--border);border-radius:2px;padding:8px 10px;font-family:'Barlow Condensed',sans-serif;font-size:14px;color:var(--white);outline:none;"
+                  onfocus="this.style.borderColor='var(--red)'" onblur="this.style.borderColor='var(--border)'">
+              </div>
+            </div>
+            <div>
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--g600);margin-bottom:4px;">Stint Number</div>
+              <input id="tire-stint" type="number" placeholder="e.g. 1" min="1" max="5" value="1"
+                style="width:100%;background:var(--s2);border:1px solid var(--border);border-radius:2px;padding:8px 10px;font-family:'Barlow Condensed',sans-serif;font-size:14px;color:var(--white);outline:none;"
+                onfocus="this.style.borderColor='var(--red)'" onblur="this.style.borderColor='var(--border)'">
+            </div>
+          </div>
+
+          <button onclick="runTirePrediction()"
+            style="width:100%;padding:10px;background:var(--red);border:none;border-radius:2px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--white);cursor:pointer;transition:opacity .15s;"
+            onmouseover="this.style.opacity='.82'" onmouseout="this.style.opacity='1'">
+            Predict Lap Time Delta
+          </button>
+
+          <div id="tire-result" style="display:none;margin-top:14px;padding:14px 16px;background:var(--s2);border:1px solid var(--border);border-radius:2px;">
+            <div id="tire-result-text" style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--white);"></div>
+            <div id="tire-result-sub" style="font-size:12px;color:var(--g500);margin-top:4px;"></div>
           </div>
         </div>
         <div class="pred-card">
@@ -2062,6 +2105,60 @@ async function runPrediction() {
     probEl.textContent = '';
   }
 }
+
+async function loadTireRaces() {
+  const select = document.getElementById('tire-race');
+  try {
+    const res = await fetch('https://f1-2026-ml.onrender.com/races');
+    const races = await res.json();
+    select.innerHTML = races.map(r => `<option value="${r}">${r}</option>`).join('');
+  } catch (err) {
+    select.innerHTML = '<option value="">Failed to load races</option>';
+  }
+}
+
+async function runTirePrediction() {
+  const race     = document.getElementById('tire-race').value;
+  const compound = document.getElementById('tire-compound').value;
+  const tyreLife = document.getElementById('tire-life').value;
+  const stint    = document.getElementById('tire-stint').value || 1;
+
+  if (!race || !tyreLife) {
+    alert('Please fill in race and tyre life.');
+    return;
+  }
+
+  const resultEl = document.getElementById('tire-result');
+  const textEl   = document.getElementById('tire-result-text');
+  const subEl    = document.getElementById('tire-result-sub');
+
+  resultEl.style.display = 'block';
+  textEl.textContent     = 'Calculating...';
+  subEl.textContent      = '';
+
+  try {
+    const url  = `https://f1-2026-ml.onrender.com/predict_tire?tyre_life=${tyreLife}&compound=${compound}&race=${encodeURIComponent(race)}&stint=${stint}`;
+    const res  = await fetch(url);
+    const data = await res.json();
+
+    if (data.error) {
+      textEl.textContent = 'Error: ' + data.error;
+      subEl.textContent  = data.max_reliable_tyre_life
+        ? `Max reliable tyre life for ${compound}: ${data.max_reliable_tyre_life} laps`
+        : '';
+      return;
+    }
+
+    textEl.innerHTML = `<span style="color:var(--red);">+${data.predicted_delta_seconds}s</span> off fastest lap`;
+    subEl.textContent = `${compound} · Lap ${tyreLife} of stint ${stint} · ${race}`;
+    resultEl.style.borderColor = 'var(--border-hi)';
+  } catch (err) {
+    textEl.textContent = 'Error — API may be waking up (free tier). Try again in 30s.';
+    subEl.textContent  = '';
+  }
+}
+
+loadTireRaces();
 </script>
 </body>
 </html>
