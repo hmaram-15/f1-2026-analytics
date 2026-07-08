@@ -1709,6 +1709,8 @@ function animateRows() {
 }
 
 /* ── CHAT ── */
+const chatSessionId = crypto.randomUUID();
+
 function setPrompt(el) {
   const inp = document.getElementById('chatInput');
   inp.value = el.textContent.trim();
@@ -1719,7 +1721,9 @@ function sendMsg() {
   const inp  = document.getElementById('chatInput');
   const text = inp.value.trim();
   if (!text) return;
+
   const box = document.getElementById('chatMsgs');
+
   box.insertAdjacentHTML('beforeend', `
     <div class="msg">
       <div class="msg-avatar user">YOU</div>
@@ -1728,19 +1732,48 @@ function sendMsg() {
         <div class="msg-text">${esc(text)}</div>
       </div>
     </div>`);
+
   inp.value = '';
   box.scrollTop = box.scrollHeight;
-  setTimeout(() => {
-    box.insertAdjacentHTML('beforeend', `
-      <div class="msg bot">
-        <div class="msg-avatar">F1</div>
-        <div class="msg-body">
-          <div class="msg-from">F1 Analyst · AI</div>
-          <div class="msg-text muted">AI integration coming soon — this will connect to a live model trained on 2026 season data, FastF1 telemetry, and real-time OpenF1 streams.</div>
-        </div>
-      </div>`);
-    box.scrollTop = box.scrollHeight;
-  }, 640);
+
+  const thinkingId = 'thinking-' + Date.now();
+  box.insertAdjacentHTML('beforeend', `
+    <div class="msg bot" id="${thinkingId}">
+      <div class="msg-avatar">F1</div>
+      <div class="msg-body">
+        <div class="msg-from">F1 Analyst · AI</div>
+        <div class="msg-text muted">Thinking...</div>
+      </div>
+    </div>`);
+  box.scrollTop = box.scrollHeight;
+
+  fetch('https://f1-2026-ml.onrender.com/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: text, session_id: chatSessionId }),
+  })
+    .then(res => {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    })
+    .then(data => {
+      const reply = data.response || data.text || data.message || data.reply || JSON.stringify(data);
+      const msgEl = document.getElementById(thinkingId);
+      if (msgEl) {
+        const textEl = msgEl.querySelector('.msg-text');
+        textEl.className = 'msg-text';
+        textEl.innerHTML = esc(reply).replace(/\n/g, '<br>');
+      }
+      box.scrollTop = box.scrollHeight;
+    })
+    .catch(() => {
+      const msgEl = document.getElementById(thinkingId);
+      if (msgEl) {
+        const textEl = msgEl.querySelector('.msg-text');
+        textEl.textContent = 'Error connecting to AI — the server may be waking up (free tier). Please try again in 30 seconds.';
+      }
+      box.scrollTop = box.scrollHeight;
+    });
 }
 
 function esc(s) {
