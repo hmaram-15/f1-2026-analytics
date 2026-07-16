@@ -1403,7 +1403,10 @@ function switchTab(name) {
     a.classList.toggle('active', a.dataset.tab === name);
   });
   document.getElementById('tab-' + name).classList.add('active');
-  if (name === 'standings')   setTimeout(animateRows, 60);
+  if (name === 'standings') {
+    document.querySelectorAll('.srow').forEach(r => { r.style.animation = 'none'; void r.offsetWidth; r.style.animation = ''; });
+    setTimeout(animateRows, 60);
+  }
   if (name === 'predictions') setTimeout(animatePredBars, 120);
   if (name === 'map' && f1Map) setTimeout(() => f1Map.invalidateSize(), 60);
 }
@@ -2089,6 +2092,14 @@ async function runPrediction() {
     alert('Please fill in all fields.');
     return;
   }
+  if (parseInt(grid, 10) < 1 || parseInt(grid, 10) > 22) {
+    alert('Grid position must be between 1 and 22.');
+    return;
+  }
+  if (parseInt(champ, 10) < 1 || parseInt(champ, 10) > 22) {
+    alert('Championship position must be between 1 and 22.');
+    return;
+  }
 
   const resultEl = document.getElementById('pred-result');
   const textEl   = document.getElementById('pred-result-text');
@@ -2136,6 +2147,10 @@ async function runTirePrediction() {
 
   if (!race || !tyreLife) {
     alert('Please fill in race and tyre life.');
+    return;
+  }
+  if (parseInt(tyreLife, 10) < 1 || parseInt(tyreLife, 10) > 40) {
+    alert('Tyre life must be between 1 and 40 laps.');
     return;
   }
 
