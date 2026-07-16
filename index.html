@@ -1517,7 +1517,6 @@ function renderResults(race, results, usingFallback) {
   tb.innerHTML = '';
   results.forEach(r => {
     const color = teamColors[r.Constructor.constructorId] || '#fff';
-    const logo  = TEAM_LOGOS[r.Constructor.constructorId] || '';
     const time  = r.Time ? r.Time.time : r.status;
     const tr    = document.createElement('tr');
     tr.innerHTML = `
@@ -1531,7 +1530,6 @@ function renderResults(race, results, usingFallback) {
       <td>
         <div style="display:flex;align-items:center;gap:7px;">
           <div style="width:3px;height:16px;border-radius:2px;background:${color};flex-shrink:0;"></div>
-          ${logo ? `<img src="${logo}" alt="${r.Constructor.name}" onerror="this.style.display='none'" style="height:16px;width:auto;max-width:60px;object-fit:contain;flex-shrink:0;">` : ''}
           <span style="color:var(--g400);font-size:12px;">${r.Constructor.name}</span>
         </div>
       </td>
